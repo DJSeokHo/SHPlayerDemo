@@ -1,4 +1,4 @@
-package com.swein.shplayerdemo.main;
+package com.swein.shplayerdemo.main.headautoplayer;
 
 import android.app.Activity;
 import android.hardware.Sensor;
