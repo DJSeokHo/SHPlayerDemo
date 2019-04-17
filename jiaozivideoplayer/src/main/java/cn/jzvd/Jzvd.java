@@ -36,6 +36,12 @@ import java.util.TimerTask;
  */
 public abstract class Jzvd extends FrameLayout implements View.OnClickListener, SeekBar.OnSeekBarChangeListener, View.OnTouchListener {
 
+    public interface JzvdDelegate {
+        void onPIP();
+    }
+
+    public static JzvdDelegate jzvdDelegate;
+
     public static final String TAG = "JZVD";
     public static final int THRESHOLD = 80;
     public static final int FULL_SCREEN_NORMAL_DELAY = 300;
@@ -44,6 +50,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     public static final int SCREEN_WINDOW_LIST = 1;
     public static final int SCREEN_WINDOW_FULLSCREEN = 2;
     public static final int SCREEN_WINDOW_TINY = 3;
+    public static final int SCREEN_WINDOW_FLOATING = 100;
 
     public static final int CURRENT_STATE_IDLE = -1;
     public static final int CURRENT_STATE_NORMAL = 0;
@@ -101,6 +108,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     public ImageView startButton;
     public SeekBar progressBar;
     public ImageView fullscreenButton;
+    public ImageView pipButton;
     public TextView currentTimeTextView, totalTimeTextView;
     public ViewGroup textureViewContainer;
     public ViewGroup topContainer, bottomContainer;
@@ -364,6 +372,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         View.inflate(context, getLayoutId(), this);
         startButton = findViewById(R.id.start);
         fullscreenButton = findViewById(R.id.fullscreen);
+        pipButton = findViewById(R.id.pip);
         progressBar = findViewById(R.id.bottom_seek_progress);
         currentTimeTextView = findViewById(R.id.current);
         totalTimeTextView = findViewById(R.id.total);
@@ -373,6 +382,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
 
         startButton.setOnClickListener(this);
         fullscreenButton.setOnClickListener(this);
+        pipButton.setOnClickListener(this);
         progressBar.setOnSeekBarChangeListener(this);
         bottomContainer.setOnClickListener(this);
         textureViewContainer.setOnClickListener(this);
@@ -458,7 +468,8 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
                 onEvent(JZUserAction.ON_CLICK_START_AUTO_COMPLETE);
                 startVideo();
             }
-        } else if (i == R.id.fullscreen) {
+        }
+        else if (i == R.id.fullscreen) {
             Log.i(TAG, "onClick fullscreen [" + this.hashCode() + "] ");
             if (currentState == CURRENT_STATE_AUTO_COMPLETE) return;
             if (currentScreen == SCREEN_WINDOW_FULLSCREEN) {
@@ -469,6 +480,14 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
                 onEvent(JZUserAction.ON_ENTER_FULLSCREEN);
                 startWindowFullscreen();
             }
+        }
+        else if(i == R.id.pip) {
+
+            if(jzvdDelegate == null) {
+                return;
+            }
+
+            jzvdDelegate.onPIP();
         }
     }
 

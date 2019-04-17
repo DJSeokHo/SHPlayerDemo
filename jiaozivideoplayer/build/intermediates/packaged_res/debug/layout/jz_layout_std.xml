@@ -32,11 +32,20 @@
         android:orientation="horizontal"
         android:visibility="invisible">
 
+        <ImageView
+            android:id="@+id/pip"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:src="@drawable/test_pip"
+            android:scaleType="fitCenter"
+            android:layout_width="52.5dp"
+            android:layout_height="match_parent" />
+
         <TextView
+            android:layout_marginLeft="5dp"
             android:id="@+id/current"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="14dp"
             android:text="00:00"
             android:textColor="#ffffff" />
 

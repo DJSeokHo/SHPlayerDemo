@@ -147,6 +147,13 @@ public class JzvdStd extends Jzvd {
             batteryTimeLayout.setVisibility(View.GONE);
             clarity.setVisibility(View.GONE);
         }
+        else if (currentScreen == SCREEN_WINDOW_FLOATING) {
+            tinyBackImageView.setVisibility(View.GONE);
+            setAllControlsVisiblity(View.INVISIBLE, View.INVISIBLE, View.INVISIBLE,
+                    View.INVISIBLE, View.INVISIBLE, View.INVISIBLE, View.INVISIBLE);
+            batteryTimeLayout.setVisibility(View.GONE);
+            clarity.setVisibility(View.GONE);
+        }
         setSystemTimeAndBattery();
 
 
@@ -500,6 +507,8 @@ public class JzvdStd extends Jzvd {
                 updateStartImage();
                 break;
             case SCREEN_WINDOW_TINY:
+                break;
+            case SCREEN_WINDOW_FLOATING:
                 break;
         }
     }

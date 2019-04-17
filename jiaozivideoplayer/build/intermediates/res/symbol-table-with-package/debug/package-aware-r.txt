@@ -47,6 +47,7 @@ drawable jz_title_bg
 drawable jz_volume_icon
 drawable jz_volume_progress_bg
 drawable retry_bg
+drawable test_pip
 id back
 id back_tiny
 id battery_level
@@ -64,6 +65,7 @@ id jz_tiny_id
 id layout_bottom
 id layout_top
 id loading
+id pip
 id replay_text
 id retry_btn
 id retry_layout

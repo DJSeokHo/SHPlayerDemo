@@ -13,9 +13,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-        <activity android:name=".main.floatingwindow.FloatingWindowActivity"
+        <activity android:name=".main.watchdetail.WatchingDetailActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
+            android:screenOrientation="portrait"
             android:launchMode="singleTask" />
         <activity
             android:name=".main.headautoplayer.HeaderAutoPlayerActivity"

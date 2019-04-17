@@ -18,8 +18,8 @@ public class HeaderAutoPlayerActivity extends Activity {
 
     private JzvdStd jzvdStd;
     private JZMediaIjkplayer jzMediaIjkplayer;
-    private Jzvd.JZAutoFullscreenListener mSensorEventListener;
-    private SensorManager mSensorManager;
+    private Jzvd.JZAutoFullscreenListener sensorEventListener;
+    private SensorManager sensorManager;
 
     private boolean isFirst = true;
 
@@ -35,8 +35,8 @@ public class HeaderAutoPlayerActivity extends Activity {
 
         SHPicasso.getInstance().loadImage(this, "http://jzvd-pic.nathen.cn/jzvd-pic/1bb2ebbe-140d-4e2e-abd2-9e7e564f71ac.png", jzvdStd.thumbImageView);
 
-        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        mSensorEventListener = new Jzvd.JZAutoFullscreenListener();
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorEventListener = new Jzvd.JZAutoFullscreenListener();
 
         initLivePlayer();
     }
@@ -65,16 +65,14 @@ public class HeaderAutoPlayerActivity extends Activity {
         else {
             jzvdStd.startButton.performClick();
         }
-
     }
 
     @Override
     protected void onResume() {
         super.onResume();
 
-        Sensor accelerometerSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mSensorManager.registerListener(mSensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
-
+        Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
         if(jzMediaIjkplayer == null || jzMediaIjkplayer.getIjkMediaPlayer() == null) {
             /*
@@ -90,10 +88,9 @@ public class HeaderAutoPlayerActivity extends Activity {
 
     @Override
     protected void onPause() {
-        super.onPause();
-
-        mSensorManager.unregisterListener(mSensorEventListener);
+        sensorManager.unregisterListener(sensorEventListener);
         Jzvd.goOnPlayOnPause();
+        super.onPause();
     }
 
     @Override

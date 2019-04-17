@@ -72,6 +72,9 @@ public class JZMediaManager implements TextureView.SurfaceTextureListener {
     }
 
     public static long getDuration() {
+        if(instance().jzMediaInterface == null) {
+            return 0;
+        }
         return instance().jzMediaInterface.getDuration();
     }
 

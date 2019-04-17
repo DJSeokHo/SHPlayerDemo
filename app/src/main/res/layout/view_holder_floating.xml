@@ -1,31 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="250dp"
+    android:layout_height="180dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".main.watchdetail.WatchingDetailActivity"
+    android:background="@color/grey">
 
-    <ImageView
-        android:layout_gravity="center"
-        android:src="@drawable/test"
-        android:scaleType="fitCenter"
-        android:layout_width="250dp"
-        android:layout_height="150dp" />
+    <cn.jzvd.JzvdStd
+        android:layout_marginTop="40dp"
+        android:id="@+id/jzvdStd"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </cn.jzvd.JzvdStd>
 
-    <Button
-        android:layout_gravity="center"
-        android:padding="5dp"
-        android:textSize="6pt"
-        android:id="@+id/buttonBack"
-        android:text="back"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp" />
+    <View
+        android:layout_marginTop="40dp"
+        android:clickable="true"
+        android:id="@+id/viewCover"
+        android:background="@color/transparent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true" />
 
-    <Button
-        android:layout_gravity="center"
-        android:padding="5dp"
-        android:textSize="6pt"
-        android:id="@+id/buttonClose"
-        android:text="close"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp" />
-</LinearLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+
+        <ImageButton
+            android:layout_gravity="center_vertical"
+            android:id="@+id/imageButtonBack"
+            android:scaleType="fitCenter"
+            android:src="@drawable/test_floating_back"
+            android:background="@color/transparent"
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
+
+        <ImageButton
+            android:layout_gravity="right|center_vertical"
+            android:id="@+id/imageButtonClose"
+            android:scaleType="fitCenter"
+            android:src="@drawable/test_floating_close"
+            android:background="@color/transparent"
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
+
+    </FrameLayout>
+
+
+
+</FrameLayout>
