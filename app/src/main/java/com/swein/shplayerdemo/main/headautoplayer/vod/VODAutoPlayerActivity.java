@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.WindowManager;
@@ -18,6 +17,7 @@ import android.view.WindowManager;
 import com.swein.shplayerdemo.R;
 import com.swein.shplayerdemo.constants.Constants;
 import com.swein.shplayerdemo.custom.JZMediaIjkplayer;
+import com.swein.shplayerdemo.framework.util.debug.log.ILog;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.eventcenter.EventCenter;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.subject.ESSArrows;
 import com.swein.shplayerdemo.framework.util.intent.IntentUtil;
@@ -32,6 +32,8 @@ import cn.jzvd.JzvdMgr;
 import cn.jzvd.JzvdStd;
 
 public class VODAutoPlayerActivity extends Activity {
+
+    private final static String TAG = "VODAutoPlayerActivity";
 
     private final static int ACTION_MANAGE_OVERLAY_PERMISSION_CODE = 101;
 
@@ -82,17 +84,17 @@ public class VODAutoPlayerActivity extends Activity {
 
                 @Override
                 public void onCompletion() {
-                    Log.d("??", "onCompletion");
+                    ILog.iLogDebug(TAG, "onCompletion");
 
                     long position = JZMediaManager.instance().getCurrentPosition();
-                    Log.d("??","current " + " ---- " + position + "  total = " + jzvdStd.getDuration());
+                    ILog.iLogDebug(TAG,"current " + " ---- " + position + "  total = " + jzvdStd.getDuration());
 
                     Constants.current = position;
                 }
 
                 @Override
                 public void onAutoCompletion() {
-                    Log.d("??", "onAutoCompletion");
+                    ILog.iLogDebug(TAG, "onAutoCompletion");
 
                     // clear record here
                     Constants.current = 0;
@@ -133,7 +135,6 @@ public class VODAutoPlayerActivity extends Activity {
         }
         else {
             jzvdStd.seekToInAdvance = Constants.current;
-            Jzvd.goOnPlayOnResume();
             jzvdStd.startButton.performClick();
         }
     }
@@ -273,7 +274,7 @@ public class VODAutoPlayerActivity extends Activity {
 
             }
             else {
-                createFloatingWindow();
+
             }
         }
     }
@@ -282,16 +283,16 @@ public class VODAutoPlayerActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("???", "onResume");
+        ILog.iLogDebug(TAG, "onResume");
         Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
-        Jzvd.goOnPlayOnResume();
+
         resumeLivePlayer();
     }
 
     @Override
     protected void onPause() {
-        Log.d("???", "onPause");
+       ILog.iLogDebug(TAG, "onPause");
         sensorManager.unregisterListener(sensorEventListener);
 
         Jzvd.backPress();

@@ -3,9 +3,9 @@ package com.swein.shplayerdemo;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 import com.swein.shplayerdemo.framework.util.activity.ActivityUtil;
+import com.swein.shplayerdemo.framework.util.debug.log.ILog;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.eventcenter.EventCenter;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.subject.ESSArrows;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
@@ -16,6 +16,8 @@ import java.util.HashMap;
 import cn.jzvd.Jzvd;
 
 public class MainActivity extends AppCompatActivity {
+
+    private final static String TAG = "MainActivity";
 
     @Override
     protected void onNewIntent(Intent intent) {
@@ -34,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
                 ThreadUtil.startUIThread(0, new Runnable() {
                     @Override
                     public void run() {
-                        Log.d("???", "haha");
+                        ILog.iLogDebug(TAG, "MainActivity exit");
                         MainActivity.this.finish();
                     }
                 });

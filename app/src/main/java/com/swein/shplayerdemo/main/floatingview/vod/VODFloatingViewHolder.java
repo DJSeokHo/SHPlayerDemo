@@ -1,7 +1,6 @@
 package com.swein.shplayerdemo.main.floatingview.vod;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -9,6 +8,7 @@ import android.widget.ImageButton;
 
 import com.swein.shplayerdemo.R;
 import com.swein.shplayerdemo.constants.Constants;
+import com.swein.shplayerdemo.framework.util.debug.log.ILog;
 import com.swein.shplayerdemo.framework.util.picasso.SHPicasso;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
 
@@ -91,10 +91,10 @@ public class VODFloatingViewHolder {
 
             @Override
             public void onCompletion() {
-                Log.d("??", "onCompletion");
+                ILog.iLogDebug(TAG, "onCompletion");
 
                 long position = JZMediaManager.instance().getCurrentPosition();
-                Log.d("??","current " + " ---- " + position + "  total = " + floatingJzvdStd.getDuration());
+                ILog.iLogDebug(TAG,"current " + " ---- " + position + "  total = " + floatingJzvdStd.getDuration());
 
                 Constants.current = position;
             }
@@ -111,7 +111,6 @@ public class VODFloatingViewHolder {
             @Override
             public void run() {
                 floatingJzvdStd.seekToInAdvance = Constants.current;
-                Jzvd.goOnPlayOnResume();
                 floatingJzvdStd.startButton.performClick();
             }
         });
@@ -129,7 +128,7 @@ public class VODFloatingViewHolder {
 
     @Override
     protected void finalize() throws Throwable {
-        Log.d("????????", "??????????????????????????????????????????????????????? finalize");
+        ILog.iLogDebug(TAG, "??????????????????????????????????????????????????????? finalize");
         super.finalize();
     }
 }

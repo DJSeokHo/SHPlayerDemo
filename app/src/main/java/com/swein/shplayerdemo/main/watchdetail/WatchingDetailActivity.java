@@ -10,7 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.WindowManager;
@@ -18,6 +17,7 @@ import android.view.WindowManager;
 import com.swein.shplayerdemo.R;
 import com.swein.shplayerdemo.constants.Constants;
 import com.swein.shplayerdemo.custom.JZMediaIjkplayer;
+import com.swein.shplayerdemo.framework.util.debug.log.ILog;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.eventcenter.EventCenter;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.subject.ESSArrows;
 import com.swein.shplayerdemo.framework.util.intent.IntentUtil;
@@ -31,6 +31,8 @@ import cn.jzvd.JzvdMgr;
 import cn.jzvd.JzvdStd;
 
 public class WatchingDetailActivity extends Activity {
+
+    private final static String TAG = "WatchingDetailActivity";
 
     private final static int ACTION_MANAGE_OVERLAY_PERMISSION_CODE = 101;
 
@@ -236,7 +238,7 @@ public class WatchingDetailActivity extends Activity {
 
             }
             else {
-                createFloatingWindow();
+               
             }
         }
     }
@@ -245,7 +247,7 @@ public class WatchingDetailActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("???", "onResume");
+        ILog.iLogDebug(TAG, "onResume");
         Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
 
@@ -254,7 +256,7 @@ public class WatchingDetailActivity extends Activity {
 
     @Override
     protected void onPause() {
-        Log.d("???", "onPause");
+        ILog.iLogDebug(TAG, "onPause");
         sensorManager.unregisterListener(sensorEventListener);
         Jzvd.backPress();
         Jzvd.releaseAllVideos();
