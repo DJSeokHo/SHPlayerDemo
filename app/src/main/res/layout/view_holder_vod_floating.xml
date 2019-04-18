@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="250dp"
+    android:layout_height="180dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".main.watchdetail.WatchingDetailActivity"
+    android:background="@color/grey">
+
+    <cn.jzvd.JzvdStd
+        android:layout_marginTop="40dp"
+        android:id="@+id/jzvdStd"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </cn.jzvd.JzvdStd>
+
+    <View
+        android:layout_marginTop="40dp"
+        android:clickable="true"
+        android:id="@+id/viewCover"
+        android:background="@color/transparent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="40dp">
+
+        <ImageButton
+            android:layout_gravity="center_vertical"
+            android:id="@+id/imageButtonBack"
+            android:scaleType="fitCenter"
+            android:src="@drawable/test_floating_back"
+            android:background="@color/transparent"
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
+
+        <ImageButton
+            android:layout_gravity="right|center_vertical"
+            android:id="@+id/imageButtonClose"
+            android:scaleType="fitCenter"
+            android:src="@drawable/test_floating_close"
+            android:background="@color/transparent"
+            android:layout_width="30dp"
+            android:layout_height="30dp" />
+
+    </FrameLayout>
+
+
+
+</FrameLayout>

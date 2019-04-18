@@ -1,7 +1,6 @@
-package com.swein.shplayerdemo.main.floatingview;
+package com.swein.shplayerdemo.main.floatingview.live;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -13,7 +12,6 @@ import com.swein.shplayerdemo.constants.Constants;
 import com.swein.shplayerdemo.custom.JZMediaIjkplayer;
 import com.swein.shplayerdemo.framework.util.picasso.SHPicasso;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
-import com.swein.shplayerdemo.main.watchdetail.WatchingDetailActivity;
 
 import cn.jzvd.Jzvd;
 import cn.jzvd.JzvdStd;
@@ -32,6 +30,7 @@ public class FloatingViewHolder {
 
     public interface FloatingViewHolderDelegate {
         void onButtonCloseClicked();
+        void onButtonBackClicked();
         void onActionDown(MotionEvent event);
         void onActionMove(MotionEvent event);
     }
@@ -79,11 +78,7 @@ public class FloatingViewHolder {
             public void onClick(View v) {
 
                 removePlayer();
-                floatingViewHolderDelegate.onButtonCloseClicked();
-
-                Intent intent = new Intent(view.getContext(), WatchingDetailActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                view.getContext().startActivity(intent);
+                floatingViewHolderDelegate.onButtonBackClicked();
 
             }
         });

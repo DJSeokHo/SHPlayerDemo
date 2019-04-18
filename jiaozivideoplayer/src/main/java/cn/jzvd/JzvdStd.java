@@ -35,6 +35,11 @@ import java.util.TimerTask;
  */
 public class JzvdStd extends Jzvd {
 
+    public interface JzvdStdDelegate {
+        void onCompletion();
+        void onAutoCompletion();
+    }
+
     protected static Timer DISMISS_CONTROL_VIEW_TIMER;
 
     public ImageView backButton;
@@ -85,12 +90,18 @@ public class JzvdStd extends Jzvd {
         }
     };
 
+    private JzvdStdDelegate jzvdStdDelegate;
+
     public JzvdStd(Context context) {
         super(context);
     }
 
     public JzvdStd(Context context, AttributeSet attrs) {
         super(context, attrs);
+    }
+
+    public void setJzvdStdDelegate(JzvdStdDelegate jzvdStdDelegate) {
+        this.jzvdStdDelegate = jzvdStdDelegate;
     }
 
     @Override
@@ -188,6 +199,7 @@ public class JzvdStd extends Jzvd {
     public void onStatePreparing() {
         super.onStatePreparing();
         changeUiToPreparing();
+
     }
 
     @Override
@@ -218,6 +230,7 @@ public class JzvdStd extends Jzvd {
         super.onStatePause();
         changeUiToPauseShow();
         cancelDismissControlViewTimer();
+
     }
 
     @Override
@@ -232,6 +245,7 @@ public class JzvdStd extends Jzvd {
         changeUiToComplete();
         cancelDismissControlViewTimer();
         bottomProgressBar.setProgress(100);
+
     }
 
     @Override
@@ -800,15 +814,25 @@ public class JzvdStd extends Jzvd {
     @Override
     public void onAutoCompletion() {
         super.onAutoCompletion();
+
         cancelDismissControlViewTimer();
+
+        if(jzvdStdDelegate != null) {
+            jzvdStdDelegate.onAutoCompletion();
+        }
     }
 
     @Override
     public void onCompletion() {
         super.onCompletion();
+
         cancelDismissControlViewTimer();
         if (clarityPopWindow != null) {
             clarityPopWindow.dismiss();
+        }
+
+        if(jzvdStdDelegate != null) {
+            jzvdStdDelegate.onCompletion();
         }
     }
 

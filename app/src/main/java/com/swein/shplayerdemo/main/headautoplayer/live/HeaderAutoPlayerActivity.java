@@ -1,4 +1,4 @@
-package com.swein.shplayerdemo.main.watchdetail;
+package com.swein.shplayerdemo.main.headautoplayer.live;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -30,7 +30,7 @@ import cn.jzvd.Jzvd;
 import cn.jzvd.JzvdMgr;
 import cn.jzvd.JzvdStd;
 
-public class WatchingDetailActivity extends Activity {
+public class HeaderAutoPlayerActivity extends Activity {
 
     private final static int ACTION_MANAGE_OVERLAY_PERMISSION_CODE = 101;
 
@@ -43,11 +43,15 @@ public class WatchingDetailActivity extends Activity {
     private WindowManager windowManager;
     private FloatingViewHolder floatingViewHolder;
 
+    private boolean isFirst = true;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_watching_detail);
+        setContentView(R.layout.activity_header_auto_player);
 
+//        shJzvdStd.setUp("http://jzvd.nathen.cn/342a5f7ef6124a4a8faf00e738b8bee4/cf6d9db0bd4d41f59d09ea0a81e918fd-5287d2089db37e62345123a1be272f8b.mp4", "test", JzvdStd.SCREEN_WINDOW_NORMAL);
+//        shJzvdStd.setUp("rtmp://184.72.239.149/vod/mp4:bigbuckbunny_1500.mp4", "test", JzvdStd.SCREEN_WINDOW_NORMAL);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorEventListener = new Jzvd.JZAutoFullscreenListener();
 
@@ -95,9 +99,44 @@ public class WatchingDetailActivity extends Activity {
             jzMediaIjkplayer = new JZMediaIjkplayer();
             jzvdStd.setUp(Constants.RTMP_URL, "live", JzvdStd.SCREEN_WINDOW_NORMAL);
             JzvdStd.setMediaInterface(jzMediaIjkplayer);
+
         }
 
-        jzvdStd.startButton.performClick();
+        if(isFirst) {
+            ThreadUtil.startUIThread(1500, new Runnable() {
+                @Override
+                public void run() {
+                    jzvdStd.startButton.performClick();
+                }
+            });
+
+            isFirst = false;
+        }
+        else {
+            jzvdStd.startButton.performClick();
+        }
+
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("???", "onResume");
+        Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+
+        resumeLivePlayer();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d("???", "onPause");
+        sensorManager.unregisterListener(sensorEventListener);
+        Jzvd.backPress();
+        Jzvd.releaseAllVideos();
+        Jzvd.clearSavedProgress(this, Constants.RTMP_URL);
+        super.onPause();
     }
 
     private boolean removeFloatingViewHolder() {
@@ -119,7 +158,7 @@ public class WatchingDetailActivity extends Activity {
             Jzvd.backPress();
         }
 
-        IntentUtil.intentStartActionBackToHome(WatchingDetailActivity.this);
+        IntentUtil.intentStartActionBackToHome(HeaderAutoPlayerActivity.this);
 
         ThreadUtil.startThread(new Runnable() {
             @Override
@@ -131,7 +170,7 @@ public class WatchingDetailActivity extends Activity {
                     windowManager.removeView(floatingViewHolder.getView());
                 }
 
-                floatingViewHolder = new FloatingViewHolder(WatchingDetailActivity.this, new FloatingViewHolder.FloatingViewHolderDelegate() {
+                floatingViewHolder = new FloatingViewHolder(HeaderAutoPlayerActivity.this, new FloatingViewHolder.FloatingViewHolderDelegate() {
 
                     private float lastX;
                     private float lastY;
@@ -148,7 +187,7 @@ public class WatchingDetailActivity extends Activity {
                     @Override
                     public void onButtonBackClicked() {
                         removeFloatingViewHolder();
-                        Intent intent = new Intent(WatchingDetailActivity.this, WatchingDetailActivity.class);
+                        Intent intent = new Intent(HeaderAutoPlayerActivity.this, HeaderAutoPlayerActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                     }
@@ -196,8 +235,8 @@ public class WatchingDetailActivity extends Activity {
                 layoutParams.y = 0;
 
                 // floating window size
-                layoutParams.width = DensityUtil.dip2px(WatchingDetailActivity.this, 250);
-                layoutParams.height = DensityUtil.dip2px(WatchingDetailActivity.this, 180);
+                layoutParams.width = DensityUtil.dip2px(HeaderAutoPlayerActivity.this, 250);
+                layoutParams.height = DensityUtil.dip2px(HeaderAutoPlayerActivity.this, 180);
 
                 // floating window background
                 layoutParams.format = PixelFormat.TRANSPARENT;
@@ -217,7 +256,7 @@ public class WatchingDetailActivity extends Activity {
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void checkPermission() {
-        if (!Settings.canDrawOverlays(WatchingDetailActivity.this)) {
+        if (!Settings.canDrawOverlays(HeaderAutoPlayerActivity.this)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
             startActivityForResult(intent,ACTION_MANAGE_OVERLAY_PERMISSION_CODE);
@@ -241,27 +280,6 @@ public class WatchingDetailActivity extends Activity {
         }
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d("???", "onResume");
-        Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
-
-        resumeLivePlayer();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d("???", "onPause");
-        sensorManager.unregisterListener(sensorEventListener);
-        Jzvd.backPress();
-        Jzvd.releaseAllVideos();
-        Jzvd.clearSavedProgress(this, Constants.RTMP_URL);
-        super.onPause();
-    }
-
     @Override
     public void onBackPressed() {
         if (Jzvd.backPress()) {
@@ -278,5 +296,4 @@ public class WatchingDetailActivity extends Activity {
 
         super.onDestroy();
     }
-
 }

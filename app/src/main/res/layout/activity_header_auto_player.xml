@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".main.headautoplayer.HeaderAutoPlayerActivity">
+    tools:context=".main.headautoplayer.live.HeaderAutoPlayerActivity">
 
     <cn.jzvd.JzvdStd
         android:id="@+id/jzvdStd"

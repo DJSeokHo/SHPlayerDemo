@@ -13,12 +13,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".main.watchdetail.WatchingDetailActivity"
+        <activity android:name=".main.headautoplayer.vod.VODAutoPlayerActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
-            android:screenOrientation="portrait"
             android:launchMode="singleTask" />
         <activity
-            android:name=".main.headautoplayer.HeaderAutoPlayerActivity"
+            android:name=".main.watchdetail.WatchingDetailActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".main.headautoplayer.live.HeaderAutoPlayerActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:launchMode="singleTask" />
         <activity

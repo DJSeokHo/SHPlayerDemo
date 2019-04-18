@@ -697,6 +697,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
     }
 
     public void onStatePrepared() {//因为这个紧接着就会进入播放状态，所以不设置state
+        Log.d("???", "onStatePrepared onStatePrepared " + seekToInAdvance);
         if (seekToInAdvance != 0) {
             JZMediaManager.seekTo(seekToInAdvance);
             seekToInAdvance = 0;

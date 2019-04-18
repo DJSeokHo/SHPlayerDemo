@@ -1,4 +1,4 @@
-package com.swein.shplayerdemo.main.watchdetail;
+package com.swein.shplayerdemo.main.headautoplayer.vod;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -24,13 +24,14 @@ import com.swein.shplayerdemo.framework.util.intent.IntentUtil;
 import com.swein.shplayerdemo.framework.util.picasso.SHPicasso;
 import com.swein.shplayerdemo.framework.util.size.DensityUtil;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
-import com.swein.shplayerdemo.main.floatingview.live.FloatingViewHolder;
+import com.swein.shplayerdemo.main.floatingview.vod.VODFloatingViewHolder;
 
+import cn.jzvd.JZMediaManager;
 import cn.jzvd.Jzvd;
 import cn.jzvd.JzvdMgr;
 import cn.jzvd.JzvdStd;
 
-public class WatchingDetailActivity extends Activity {
+public class VODAutoPlayerActivity extends Activity {
 
     private final static int ACTION_MANAGE_OVERLAY_PERMISSION_CODE = 101;
 
@@ -41,12 +42,14 @@ public class WatchingDetailActivity extends Activity {
 
     private WindowManager.LayoutParams layoutParams;
     private WindowManager windowManager;
-    private FloatingViewHolder floatingViewHolder;
+    private VODFloatingViewHolder vodFloatingViewHolder;
+
+    private boolean isFirst = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_watching_detail);
+        setContentView(R.layout.activity_vodauto_player);
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         sensorEventListener = new Jzvd.JZAutoFullscreenListener();
@@ -57,9 +60,10 @@ public class WatchingDetailActivity extends Activity {
     private void initLivePlayer() {
 
         Jzvd.releaseAllVideos();
-        Jzvd.clearSavedProgress(this, Constants.RTMP_URL);
+        Jzvd.clearSavedProgress(this, null);
 
         Jzvd.jzvdDelegate = new Jzvd.JzvdDelegate() {
+
             @Override
             public void onPIP() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -74,10 +78,30 @@ public class WatchingDetailActivity extends Activity {
         if(jzvdStd == null) {
             jzvdStd = findViewById(R.id.jzvdStd);
             SHPicasso.getInstance().loadImage(this, "http://jzvd-pic.nathen.cn/jzvd-pic/1bb2ebbe-140d-4e2e-abd2-9e7e564f71ac.png", jzvdStd.thumbImageView);
+            jzvdStd.setJzvdStdDelegate(new JzvdStd.JzvdStdDelegate() {
+
+                @Override
+                public void onCompletion() {
+                    Log.d("??", "onCompletion");
+
+                    long position = JZMediaManager.instance().getCurrentPosition();
+                    Log.d("??","current " + " ---- " + position + "  total = " + jzvdStd.getDuration());
+
+                    Constants.current = position;
+                }
+
+                @Override
+                public void onAutoCompletion() {
+                    Log.d("??", "onAutoCompletion");
+
+                    // clear record here
+                    Constants.current = 0;
+                }
+            });
         }
 
         jzMediaIjkplayer = new JZMediaIjkplayer();
-        jzvdStd.setUp(Constants.RTMP_URL, "live", JzvdStd.SCREEN_WINDOW_NORMAL);
+        jzvdStd.setUp(Constants.VOD_URL, "vod", JzvdStd.SCREEN_WINDOW_NORMAL);
         JzvdStd.setMediaInterface(jzMediaIjkplayer);
 
     }
@@ -87,23 +111,37 @@ public class WatchingDetailActivity extends Activity {
         if(jzvdStd == null) {
 
             Jzvd.releaseAllVideos();
-            Jzvd.clearSavedProgress(this, Constants.RTMP_URL);
+            Jzvd.clearSavedProgress(this, Constants.VOD_URL);
 
             jzvdStd = findViewById(R.id.jzvdStd);
             SHPicasso.getInstance().loadImage(this, "http://jzvd-pic.nathen.cn/jzvd-pic/1bb2ebbe-140d-4e2e-abd2-9e7e564f71ac.png", jzvdStd.thumbImageView);
 
             jzMediaIjkplayer = new JZMediaIjkplayer();
-            jzvdStd.setUp(Constants.RTMP_URL, "live", JzvdStd.SCREEN_WINDOW_NORMAL);
+            jzvdStd.setUp(Constants.VOD_URL, "vod", JzvdStd.SCREEN_WINDOW_NORMAL);
             JzvdStd.setMediaInterface(jzMediaIjkplayer);
         }
 
-        jzvdStd.startButton.performClick();
+        if(isFirst) {
+            ThreadUtil.startUIThread(1500, new Runnable() {
+                @Override
+                public void run() {
+                    jzvdStd.startButton.performClick();
+                }
+            });
+
+            isFirst = false;
+        }
+        else {
+            jzvdStd.seekToInAdvance = Constants.current;
+            Jzvd.goOnPlayOnResume();
+            jzvdStd.startButton.performClick();
+        }
     }
 
     private boolean removeFloatingViewHolder() {
-        if (floatingViewHolder != null){
-            windowManager.removeView(floatingViewHolder.getView());
-            floatingViewHolder = null;
+        if (vodFloatingViewHolder != null){
+            windowManager.removeView(vodFloatingViewHolder.getView());
+            vodFloatingViewHolder = null;
 
             EventCenter.getInstance().sendEvent(ESSArrows.EXIT_APP, this, null);
 
@@ -119,7 +157,7 @@ public class WatchingDetailActivity extends Activity {
             Jzvd.backPress();
         }
 
-        IntentUtil.intentStartActionBackToHome(WatchingDetailActivity.this);
+        IntentUtil.intentStartActionBackToHome(VODAutoPlayerActivity.this);
 
         ThreadUtil.startThread(new Runnable() {
             @Override
@@ -127,11 +165,11 @@ public class WatchingDetailActivity extends Activity {
 
                 windowManager = (WindowManager) getApplication().getSystemService(WINDOW_SERVICE);
 
-                if (floatingViewHolder != null){
-                    windowManager.removeView(floatingViewHolder.getView());
+                if (vodFloatingViewHolder != null){
+                    windowManager.removeView(vodFloatingViewHolder.getView());
                 }
 
-                floatingViewHolder = new FloatingViewHolder(WatchingDetailActivity.this, new FloatingViewHolder.FloatingViewHolderDelegate() {
+                vodFloatingViewHolder = new VODFloatingViewHolder(VODAutoPlayerActivity.this, new VODFloatingViewHolder.VODFloatingViewHolderDelegate() {
 
                     private float lastX;
                     private float lastY;
@@ -148,7 +186,7 @@ public class WatchingDetailActivity extends Activity {
                     @Override
                     public void onButtonBackClicked() {
                         removeFloatingViewHolder();
-                        Intent intent = new Intent(WatchingDetailActivity.this, WatchingDetailActivity.class);
+                        Intent intent = new Intent(VODAutoPlayerActivity.this, VODAutoPlayerActivity.class);
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         startActivity(intent);
                     }
@@ -172,7 +210,7 @@ public class WatchingDetailActivity extends Activity {
                         layoutParams.y += tranY;
 
                         // update floating  window position
-                        windowManager.updateViewLayout(floatingViewHolder.getView(), layoutParams);
+                        windowManager.updateViewLayout(vodFloatingViewHolder.getView(), layoutParams);
 
                         lastX = nowX;
                         lastY = nowY;
@@ -196,8 +234,8 @@ public class WatchingDetailActivity extends Activity {
                 layoutParams.y = 0;
 
                 // floating window size
-                layoutParams.width = DensityUtil.dip2px(WatchingDetailActivity.this, 250);
-                layoutParams.height = DensityUtil.dip2px(WatchingDetailActivity.this, 180);
+                layoutParams.width = DensityUtil.dip2px(VODAutoPlayerActivity.this, 250);
+                layoutParams.height = DensityUtil.dip2px(VODAutoPlayerActivity.this, 180);
 
                 // floating window background
                 layoutParams.format = PixelFormat.TRANSPARENT;
@@ -206,9 +244,8 @@ public class WatchingDetailActivity extends Activity {
                 ThreadUtil.startUIThread(1000, new Runnable() {
                     @Override
                     public void run() {
-                        windowManager.addView(floatingViewHolder.getView(), layoutParams);
-                        floatingViewHolder.setThumbnail();
-                        floatingViewHolder.initLivePlayer();
+                        windowManager.addView(vodFloatingViewHolder.getView(), layoutParams);
+                        vodFloatingViewHolder.initVODPlayer();
                     }
                 });
             }
@@ -217,7 +254,7 @@ public class WatchingDetailActivity extends Activity {
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void checkPermission() {
-        if (!Settings.canDrawOverlays(WatchingDetailActivity.this)) {
+        if (!Settings.canDrawOverlays(VODAutoPlayerActivity.this)) {
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                     Uri.parse("package:" + getPackageName()));
             startActivityForResult(intent,ACTION_MANAGE_OVERLAY_PERMISSION_CODE);
@@ -248,7 +285,7 @@ public class WatchingDetailActivity extends Activity {
         Log.d("???", "onResume");
         Sensor accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
-
+        Jzvd.goOnPlayOnResume();
         resumeLivePlayer();
     }
 
@@ -256,9 +293,10 @@ public class WatchingDetailActivity extends Activity {
     protected void onPause() {
         Log.d("???", "onPause");
         sensorManager.unregisterListener(sensorEventListener);
+
         Jzvd.backPress();
         Jzvd.releaseAllVideos();
-        Jzvd.clearSavedProgress(this, Constants.RTMP_URL);
+        Jzvd.clearSavedProgress(this, Constants.VOD_URL);
         super.onPause();
     }
 
@@ -269,7 +307,8 @@ public class WatchingDetailActivity extends Activity {
         }
 
         Jzvd.releaseAllVideos();
-        Jzvd.clearSavedProgress(this, Constants.RTMP_URL);
+        Jzvd.clearSavedProgress(this, Constants.VOD_URL);
+        Constants.current = 0;
         super.onBackPressed();
     }
 
