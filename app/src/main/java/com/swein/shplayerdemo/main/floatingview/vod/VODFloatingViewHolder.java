@@ -53,15 +53,23 @@ public class VODFloatingViewHolder {
                 switch (event.getAction()){
                     case MotionEvent.ACTION_DOWN:
                         vodFloatingViewHolderDelegate.onActionDown(event);
+                        return true;
+
                     case MotionEvent.ACTION_MOVE:
                         vodFloatingViewHolderDelegate.onActionMove(event);
+                        return true;
 
                     case MotionEvent.ACTION_UP:
-                        floatingJzvdStd.startButton.performClick();
+                        if(Jzvd.CURRENT_STATE_PLAYING != floatingJzvdStd.currentState) {
+                            floatingJzvdStd.startButton.performClick();
+                        }
                 }
                 return false;
             }
         });
+
+        viewCover.setSoundEffectsEnabled(false);
+
 
         imageButtonClose.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -83,6 +91,8 @@ public class VODFloatingViewHolder {
         });
 
         floatingJzvdStd = view.findViewById(R.id.jzvdStd);
+        floatingJzvdStd.setSoundEffectsEnabled(false);
+        floatingJzvdStd.startButton.setSoundEffectsEnabled(false);
     }
 
     public void initVODPlayer() {

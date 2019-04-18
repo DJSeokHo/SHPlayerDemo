@@ -53,16 +53,28 @@ public class FloatingViewHolder {
 
                 switch (event.getAction()){
                     case MotionEvent.ACTION_DOWN:
+
                         floatingViewHolderDelegate.onActionDown(event);
+                        return true;
+
                     case MotionEvent.ACTION_MOVE:
+
                         floatingViewHolderDelegate.onActionMove(event);
+                        return true;
 
                     case MotionEvent.ACTION_UP:
-                        jzvdStd.startButton.performClick();
+
+                        if(Jzvd.CURRENT_STATE_PLAYING != jzvdStd.currentState) {
+                            jzvdStd.startButton.performClick();
+                        }
+
                 }
                 return false;
             }
         });
+
+        viewCover.setSoundEffectsEnabled(false);
+
 
         imageButtonClose.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -84,7 +96,8 @@ public class FloatingViewHolder {
         });
 
         jzvdStd = view.findViewById(R.id.jzvdStd);
-
+        jzvdStd.setSoundEffectsEnabled(false);
+        jzvdStd.startButton.setSoundEffectsEnabled(false);
     }
 
     public void setThumbnail() {

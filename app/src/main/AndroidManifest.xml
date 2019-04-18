@@ -13,7 +13,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".main.headautoplayer.vod.VODAutoPlayerActivity"
+        <activity android:name=".main.biglistitem.ListAutoTinyWindowActivity"></activity>
+        <activity
+            android:name=".main.headautoplayer.vod.VODAutoPlayerActivity"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:launchMode="singleTask" />
         <activity

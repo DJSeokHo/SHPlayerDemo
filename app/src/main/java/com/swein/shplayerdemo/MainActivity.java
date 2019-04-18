@@ -9,7 +9,7 @@ import com.swein.shplayerdemo.framework.util.debug.log.ILog;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.eventcenter.EventCenter;
 import com.swein.shplayerdemo.framework.util.eventsplitshot.subject.ESSArrows;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
-import com.swein.shplayerdemo.main.headautoplayer.vod.VODAutoPlayerActivity;
+import com.swein.shplayerdemo.main.biglistitem.ListAutoTinyWindowActivity;
 
 import java.util.HashMap;
 
@@ -44,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
 //        ActivityUtil.startNewActivityWithFinish(this, HeaderAutoPlayerActivity.class);
-        ActivityUtil.startNewActivityWithFinish(this, VODAutoPlayerActivity.class);
+//        ActivityUtil.startNewActivityWithFinish(this, VODAutoPlayerActivity.class);
 //        ActivityUtil.startNewActivityWithFinish(this, WatchingDetailActivity.class);
+        ActivityUtil.startNewActivityWithFinish(this, ListAutoTinyWindowActivity.class);
     }
 }
