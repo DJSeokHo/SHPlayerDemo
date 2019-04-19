@@ -1,9 +1,106 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".main.vodupload.VodUploadActivity">
+    tools:context=".main.vodupload.VodUploadActivity"
+    android:background="@color/white">
 
-</android.support.constraint.ConstraintLayout>
+    <RelativeLayout
+        android:id="@+id/shVideoViewRelativeLayoutParent"
+        android:background="@color/black"
+        android:layout_marginTop="60dp"
+        android:layout_width="match_parent"
+        android:gravity="center"
+        android:layout_height="250dp">
+
+        <com.swein.shplayerdemo.main.vodupload.customview.SHVideoView
+            android:id="@+id/shVideoView"
+            android:layout_width="wrap_content"
+            android:layout_height="250dp" />
+    
+        <ImageButton
+            android:id="@+id/imageButtonPlay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        
+    </RelativeLayout>
+
+
+    <Button
+        android:layout_gravity="right"
+        android:textSize="6pt"
+        android:id="@+id/buttonSelect"
+        android:background="@color/transparent"
+        android:text="select"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <SeekBar
+        android:layout_gravity="bottom"
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="80dp"/>
+
+    <ImageView
+        android:layout_gravity="center_horizontal|bottom"
+        android:id="@+id/imageView"
+        android:scaleType="fitXY"
+        android:layout_width="match_parent"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="30dp"
+        android:layout_height="50dp" />
+
+    <LinearLayout
+        android:layout_marginTop="50dp"
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/imageViewCoverOne"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:layout_width="100dp"
+            android:layout_height="60dp" />
+
+        <ImageView
+            android:id="@+id/imageViewCoverTwo"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:layout_width="100dp"
+            android:layout_height="60dp" />
+
+        <ImageView
+            android:id="@+id/imageViewCoverThree"
+            android:layout_gravity="center"
+            android:scaleType="centerCrop"
+            android:layout_width="100dp"
+            android:layout_height="60dp" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:visibility="gone"
+        android:id="@+id/frameLayoutProgress"
+        android:background="#60000000"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ProgressBar
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </FrameLayout>
+</FrameLayout>
