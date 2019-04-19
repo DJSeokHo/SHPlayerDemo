@@ -2,11 +2,13 @@ package com.swein.shplayerdemo.main.biglistitem;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.swein.shplayerdemo.R;
+import com.swein.shplayerdemo.framework.util.debug.log.ILog;
 import com.swein.shplayerdemo.main.biglistitem.adapter.ListAutoTinyWindowAdapter;
 import com.swein.shplayerdemo.main.biglistitem.item.model.ListAutoTinyWindowItemModel;
 
@@ -17,11 +19,14 @@ import cn.jzvd.Jzvd;
 
 public class ListAutoTinyWindowActivity extends Activity {
 
-
     private final static String TAG = "ListAutoTinyWindowActivity";
 
     private RecyclerView recyclerView;
     private ListAutoTinyWindowAdapter listAutoTinyWindowAdapter;
+
+    private RecyclerView.LayoutManager layoutManager;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,19 +42,105 @@ public class ListAutoTinyWindowActivity extends Activity {
     }
 
     private void initList() {
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+
+        layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
 
         listAutoTinyWindowAdapter = new ListAutoTinyWindowAdapter(this);
         recyclerView.setAdapter(listAutoTinyWindowAdapter);
         recyclerView.addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
+
             @Override
             public void onChildViewAttachedToWindow(View view) {
-                Jzvd.onChildViewAttachedToWindow(view, R.id.autoTinyPlayer);
+                // when visible
+//                Jzvd.onChildViewAttachedToWindow(view, R.id.jzvdStd);
+
             }
 
             @Override
             public void onChildViewDetachedFromWindow(View view) {
-                Jzvd.onChildViewDetachedFromWindow(view);
+                // when invisible
+//                Jzvd.onChildViewDetachedFromWindow(view);
+
+                Jzvd.onChildViewDetachedFromWindowStopAutoPlay(view);
+            }
+        });
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+
+                switch (newState) {
+
+                    case RecyclerView.SCROLL_STATE_DRAGGING:
+                        /*
+                        drag
+                         */
+                        ILog.iLogDebug(TAG, "SCROLL_STATE_DRAGGING");
+                        break;
+
+                    case RecyclerView.SCROLL_STATE_IDLE:
+                        /*
+                        stop
+                         */
+                        ILog.iLogDebug(TAG, "SCROLL_STATE_IDLE");
+//                        ILog.iLogDebug(TAG, ((LinearLayoutManager)layoutManager).findFirstVisibleItemPosition());
+//                        ILog.iLogDebug(TAG, ((LinearLayoutManager)layoutManager).findFirstCompletelyVisibleItemPosition());
+
+
+                         /*
+                        auto play option
+                         */
+
+//                         if(JzvdMgr.getSecondFloor() != null) {
+//                             if(JzvdMgr.getSecondFloor().currentScreen == Jzvd.SCREEN_WINDOW_TINY || JZMediaManager.isPlaying()) {
+//                                 ILog.iLogDebug(TAG, "yes");
+//                             }
+//                             else {
+//                                 RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForLayoutPosition(((LinearLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition());
+//                                 if (viewHolder instanceof ListAutoTinyWindowItemViewHolder) {
+//                                     ListAutoTinyWindowItemViewHolder listAutoTinyWindowItemViewHolder = (ListAutoTinyWindowItemViewHolder) viewHolder;
+//                                     listAutoTinyWindowItemViewHolder.autoPlay();
+//                                 }
+//                             }
+//                         }
+//                         else {
+//                             RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForLayoutPosition(((LinearLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition());
+//                             if (viewHolder instanceof ListAutoTinyWindowItemViewHolder) {
+//                                 ListAutoTinyWindowItemViewHolder listAutoTinyWindowItemViewHolder = (ListAutoTinyWindowItemViewHolder) viewHolder;
+//                                 listAutoTinyWindowItemViewHolder.autoPlay();
+//                             }
+//                         }
+
+//                        if(JzvdMgr.getSecondFloor() == null) {
+//                            RecyclerView.ViewHolder viewHolder = recyclerView.findViewHolderForLayoutPosition(((LinearLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition());
+//                            if (viewHolder instanceof ListAutoTinyWindowItemViewHolder) {
+//                                ListAutoTinyWindowItemViewHolder listAutoTinyWindowItemViewHolder = (ListAutoTinyWindowItemViewHolder) viewHolder;
+//                                listAutoTinyWindowItemViewHolder.autoPlay();
+//                            }
+//                        }
+
+
+                        break;
+
+                    case RecyclerView.SCROLL_STATE_SETTLING:
+                       /*
+                       auto scrolling
+                        */
+
+                        ILog.iLogDebug(TAG, "SCROLL_STATE_SETTLING");
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            @Override
+            public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
             }
         });
 
@@ -78,11 +169,6 @@ public class ListAutoTinyWindowActivity extends Activity {
         listAutoTinyWindowItemModel = new ListAutoTinyWindowItemModel();
         listAutoTinyWindowItemModel.url = "http://jzvd.nathen.cn/6ea7357bc3fa4658b29b7933ba575008/fbbba953374248eb913cb1408dc61d85-5287d2089db37e62345123a1be272f8b.mp4";
         listAutoTinyWindowItemModel.imageUrl = "http://jzvd-pic.nathen.cn/jzvd-pic/bd7ffc84-8407-4037-a078-7d922ce0fb0f.jpg";
-        list.add(listAutoTinyWindowItemModel);
-
-        listAutoTinyWindowItemModel = new ListAutoTinyWindowItemModel();
-        listAutoTinyWindowItemModel.url = "http://jzvd.nathen.cn/35b3dc97fbc240219961bd1fccc6400b/8d9b76ab5a584bce84a8afce012b72d3-5287d2089db37e62345123a1be272f8b.mp4";
-        listAutoTinyWindowItemModel.imageUrl = "http://jzvd-pic.nathen.cn/jzvd-pic/f2dbd12e-b1cb-4daf-aff1-8c6be2f64d1a.jpg";
         list.add(listAutoTinyWindowItemModel);
 
         listAutoTinyWindowItemModel = new ListAutoTinyWindowItemModel();
@@ -125,6 +211,11 @@ public class ListAutoTinyWindowActivity extends Activity {
         listAutoTinyWindowItemModel.imageUrl = "http://jzvd-pic.nathen.cn/jzvd-pic/1bb2ebbe-140d-4e2e-abd2-9e7e564f71ac.png";
         list.add(listAutoTinyWindowItemModel);
 
+        for(int i = 0; i < list.size(); i++) {
+            list.get(i).index = i;
+            list.get(i).title = "Title " + i;
+            list.get(i).subTitle = list.get(i).imageUrl;
+        }
         return list;
     }
 }

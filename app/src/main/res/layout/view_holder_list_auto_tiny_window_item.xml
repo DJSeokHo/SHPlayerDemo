@@ -2,11 +2,51 @@
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="200dp">
+    android:layout_height="270dp"
+    android:layout_marginBottom="20dp"
+    android:background="@color/white">
 
     <cn.jzvd.JzvdStd
-        android:id="@+id/autoTinyPlayer"
+        android:id="@+id/jzvdStd"
         android:layout_width="match_parent"
         android:layout_height="200dp" />
 
+    <LinearLayout
+        android:layout_marginTop="200dp"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:orientation="vertical"
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp">
+
+        <TextView
+            android:layout_marginTop="10dp"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:id="@+id/textViewTitle"
+            android:textSize="7pt"
+            android:textColor="@color/black"
+            android:text="title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:id="@+id/textViewSubTitle"
+            android:layout_marginTop="5dp"
+            android:textSize="6pt"
+            android:textColor="@color/grey"
+            android:text="sub title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/viewCover"
+        android:clickable="true"
+        android:background="@color/transparent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true" />
 </FrameLayout>

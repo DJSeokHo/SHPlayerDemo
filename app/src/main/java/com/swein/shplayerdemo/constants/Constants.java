@@ -8,4 +8,5 @@ public class Constants {
     public final static String VOD_URL = "rtmp://184.72.239.149/vod/mp4:bigbuckbunny_1500.mp4";
 
     public static long current = 0;
+
 }

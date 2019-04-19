@@ -16,9 +16,13 @@ import java.util.List;
 
 public class ListAutoTinyWindowAdapter extends RecyclerView.Adapter {
 
+    private final static String TAG = "ListAutoTinyWindowAdapter";
+
     private Context context;
 
     List<ListAutoTinyWindowItemModel> listAutoTinyWindowItemModelList = new ArrayList<>();
+
+
 
     public ListAutoTinyWindowAdapter(Context context) {
         this.context = context;
@@ -36,7 +40,6 @@ public class ListAutoTinyWindowAdapter extends RecyclerView.Adapter {
 
         ListAutoTinyWindowItemViewHolder listAutoTinyWindowItemViewHolder = (ListAutoTinyWindowItemViewHolder) viewHolder;
         listAutoTinyWindowItemViewHolder.setPlayer(listAutoTinyWindowItemModelList.get(i));
-
     }
 
     public void loadMore(List<ListAutoTinyWindowItemModel> listAutoTinyWindowItemModelList) {

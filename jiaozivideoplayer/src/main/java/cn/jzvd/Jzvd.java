@@ -349,6 +349,17 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
         }
     }
 
+    public static void onChildViewDetachedFromWindowStopAutoPlay(View view) {
+        if (JzvdMgr.getCurrentJzvd() != null && JzvdMgr.getCurrentJzvd().currentScreen != Jzvd.SCREEN_WINDOW_TINY) {
+            Jzvd jzvd = JzvdMgr.getCurrentJzvd();
+            if (((ViewGroup) view).indexOfChild(jzvd) != -1) {
+                if (jzvd.currentState == Jzvd.CURRENT_STATE_PAUSE) {
+                    Jzvd.releaseAllVideos();
+                }
+            }
+        }
+    }
+
     public static void setTextureViewRotation(int rotation) {
         if (JZMediaManager.textureView != null) {
             JZMediaManager.textureView.setRotation(rotation);
@@ -1065,7 +1076,7 @@ public abstract class Jzvd extends FrameLayout implements View.OnClickListener, 
             Constructor<Jzvd> constructor = (Constructor<Jzvd>) Jzvd.this.getClass().getConstructor(Context.class);
             Jzvd jzvd = constructor.newInstance(getContext());
             jzvd.setId(R.id.jz_tiny_id);
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(400, 400);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(600, 350);
             lp.gravity = Gravity.RIGHT | Gravity.BOTTOM;
             vp.addView(jzvd, lp);
             jzvd.setUp(jzDataSource, JzvdStd.SCREEN_WINDOW_TINY);
