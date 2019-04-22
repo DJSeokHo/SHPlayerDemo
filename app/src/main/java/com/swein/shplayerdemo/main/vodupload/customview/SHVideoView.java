@@ -100,6 +100,14 @@ public class SHVideoView extends SurfaceView {
         return 0;
     }
 
+    public boolean isPlaying() {
+        if (player != null) {
+            return player.isPlaying();
+        }
+
+        return false;
+    }
+
     public void start() {
         if (player != null && !player.isPlaying()) {
             player.start();

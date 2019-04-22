@@ -19,14 +19,41 @@
             android:id="@+id/shVideoView"
             android:layout_width="wrap_content"
             android:layout_height="250dp" />
-    
-        <ImageButton
-            android:id="@+id/imageButtonPlay"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
         
     </RelativeLayout>
 
+    <FrameLayout
+        android:background="@color/half_transparent_light_grey"
+        android:layout_marginTop="60dp"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        >
+
+        <ImageView
+            android:id="@+id/imageViewCover"
+            android:scaleType="fitCenter"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ImageView
+            android:clickable="false"
+            android:layout_gravity="center"
+            android:scaleType="fitXY"
+            android:src="@drawable/test_white_play"
+            android:background="@color/transparent"
+            android:id="@+id/imageViewPlay"
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
+
+        <View
+            android:clickable="true"
+            android:id="@+id/viewPlayerCover"
+            android:background="@color/transparent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:focusable="true" />
+
+    </FrameLayout>
 
     <Button
         android:layout_gravity="right"
