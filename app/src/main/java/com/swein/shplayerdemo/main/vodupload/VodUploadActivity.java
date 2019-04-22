@@ -38,8 +38,6 @@ public class VodUploadActivity extends Activity {
 
     private final static String TAG = "VodUploadActivity";
 
-    private String realPath;
-
     private MediaMetadataRetriever mediaMetadataRetriever;
 
     private ImageView imageView;
@@ -50,17 +48,18 @@ public class VodUploadActivity extends Activity {
 
     private FrameLayout frameLayoutProgress;
 
-    private List<Bitmap> bitmapList = new ArrayList<>();
-    private List<Bitmap> coverBitmapList = new ArrayList<>();
+    private List<Bitmap> tempBitmapList;
+
+    private List<Bitmap> coverBitmapList;
     private Bitmap result;
-    private Bitmap cover;
+    private Bitmap preview;
 
     private SHVideoView shVideoView;
     private SeekBar seekBar;
 
     private ImageView imageViewPlay;
-    private ImageView imageViewCover;
-    private View viewPlayerCover;
+    private ImageView imageViewPreview;
+    private View viewPlayerPreview;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +67,7 @@ public class VodUploadActivity extends Activity {
         setContentView(R.layout.activity_vod_upload);
 
         findView();
-
+        disableSeekBar();
     }
 
     private void findView() {
@@ -85,10 +84,10 @@ public class VodUploadActivity extends Activity {
         imageViewCoverThree = findViewById(R.id.imageViewCoverThree);
 
         imageViewPlay = findViewById(R.id.imageViewPlay);
-        viewPlayerCover = findViewById(R.id.viewPlayerCover);
-        imageViewCover = findViewById(R.id.imageViewCover);
+        viewPlayerPreview = findViewById(R.id.viewPlayerPreview);
+        imageViewPreview = findViewById(R.id.imageViewPreview);
 
-        viewPlayerCover.setOnClickListener(new View.OnClickListener() {
+        viewPlayerPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 toggleVideo();
@@ -100,12 +99,11 @@ public class VodUploadActivity extends Activity {
         shVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                mp.stop();
                 ILog.iLogDebug(TAG, "onCompletion");
-                showCover();
+                showPreview();
                 imageViewPlay.setVisibility(View.VISIBLE);
-                seekBar.setProgress(0);
-                seekBar.setEnabled(false);
+                resetSeekBar();
+                disableSeekBar();
             }
         });
 
@@ -119,6 +117,8 @@ public class VodUploadActivity extends Activity {
         shVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
+                imageViewPlay.setVisibility(View.VISIBLE);
+                disableSeekBar();
                 ILog.iLogDebug(TAG, "onPrepared");
             }
         });
@@ -137,34 +137,26 @@ public class VodUploadActivity extends Activity {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
 
-                ILog.iLogDebug(TAG, isTouch);
                 if(isTouch) {
                     shVideoView.seekTo(progress * 1000);
                 }
-//                ILog.iLogDebug(TAG, progress);
-//                shVideoView.seekTo(progress * 1000);
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
                 isTouch = true;
-
-                ILog.iLogDebug(TAG, isTouch);
             }
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-
                 isTouch = false;
-
-                ILog.iLogDebug(TAG, isTouch);
             }
         });
     }
 
     private void toggleVideo() {
 
-        hideCover();
+        hidePreview();
 
         if(shVideoView == null) {
             return;
@@ -175,16 +167,29 @@ public class VodUploadActivity extends Activity {
         }
         else {
             shVideoView.start();
-            seekBar.setEnabled(true);
-            syncSeekBar();
         }
 
         if(shVideoView.isPlaying()) {
             imageViewPlay.setVisibility(View.GONE);
+            enableSeekBar();
+            syncSeekBar();
         }
         else {
             imageViewPlay.setVisibility(View.VISIBLE);
+            disableSeekBar();
         }
+    }
+
+    private void enableSeekBar() {
+        seekBar.setEnabled(true);
+    }
+
+    private void disableSeekBar() {
+        seekBar.setEnabled(false);
+    }
+
+    private void resetSeekBar() {
+        seekBar.setProgress(0);
     }
 
     private void syncSeekBar() {
@@ -246,20 +251,18 @@ public class VodUploadActivity extends Activity {
         return result;
     }
 
-    private void initCover() {
-        cover = extractFrame(shVideoView.getCurrentPosition() * 1000);
-        cover = BitmapUtil.getScaleBitmap(cover, (int) (cover.getWidth() * 0.1), (int) (cover.getHeight() * 0.1));
-        imageViewCover.setImageBitmap(cover);
+    private void initPreview() {
+        preview = extractFrame(shVideoView.getCurrentPosition() * 1000);
+        preview = BitmapUtil.getScaleBitmap(preview, (int) (preview.getWidth() * 0.1), (int) (preview.getHeight() * 0.1));
+        imageViewPreview.setImageBitmap(preview);
     }
 
-    private void showCover() {
-
-        imageViewCover.setVisibility(View.VISIBLE);
-
+    private void showPreview() {
+        imageViewPreview.setVisibility(View.VISIBLE);
     }
 
-    private void hideCover() {
-        imageViewCover.setVisibility(View.GONE);
+    private void hidePreview() {
+        imageViewPreview.setVisibility(View.GONE);
     }
 
     private void initFile(File file) {
@@ -267,6 +270,10 @@ public class VodUploadActivity extends Activity {
         if (file == null) {
             return;
         }
+
+        clearImageViews();
+        clearBitMapCoverList();
+        clearBitmapPreview();
 
         mediaMetadataRetriever = new MediaMetadataRetriever();
         mediaMetadataRetriever.setDataSource(file.getAbsolutePath());
@@ -299,13 +306,15 @@ public class VodUploadActivity extends Activity {
             @Override
             public void run() {
 
+                tempBitmapList = new ArrayList<>();
+
                 for (int i = 0; i < floatList.size(); i++) {
                     ILog.iLogDebug(TAG, floatList.get(i));
                     Bitmap bitmap = extractFrame(floatList.get(i) * 1000);
                     bitmap = BitmapUtil.getScaleBitmap(bitmap, (int) (bitmap.getWidth() * 0.1), (int) (bitmap.getHeight() * 0.1));
-                    bitmapList.add(bitmap);
+                    tempBitmapList.add(bitmap);
 
-                    result = concatBitmaps(0, bitmapList);
+                    result = concatBitmaps(0, tempBitmapList);
                     ILog.iLogDebug(TAG, result.getWidth() + " " + result.getHeight());
                 }
 
@@ -317,24 +326,23 @@ public class VodUploadActivity extends Activity {
 
                         shVideoView.setVideoPath(file.getAbsolutePath());
 
-                        initCover();
-
-                        showCover();
+                        initPreview();
+                        showPreview();
 
                         ThreadUtil.startThread(new Runnable() {
                             @Override
                             public void run() {
 
-                                int total = bitmapList.size();
+                                int total = tempBitmapList.size();
                                 for (int i = total - 1; i >= 0; i--) {
-                                    Bitmap b = bitmapList.get(i);
+                                    Bitmap b = tempBitmapList.get(i);
                                     if (!b.isRecycled()) {
                                         b.recycle();
                                     }
                                 }
 
-                                bitmapList.clear();
-                                bitmapList = null;
+                                tempBitmapList.clear();
+                                tempBitmapList = null;
                             }
                         });
                     }
@@ -345,6 +353,8 @@ public class VodUploadActivity extends Activity {
         ThreadUtil.startThread(new Runnable() {
             @Override
             public void run() {
+
+                coverBitmapList = new ArrayList<>();
 
                 for (int i = 0; i < coverList.size(); i++) {
                     ILog.iLogDebug(TAG, coverList.get(i));
@@ -361,11 +371,20 @@ public class VodUploadActivity extends Activity {
                         imageViewCoverTwo.setImageBitmap(coverBitmapList.get(1));
                         imageViewCoverThree.setImageBitmap(coverBitmapList.get(2));
 
+                        resetSeekBar();
                     }
                 });
             }
         });
+    }
 
+    private void clearImageViews() {
+        imageView.setImageBitmap(null);
+        imageViewPreview.setImageBitmap(null);
+        imageViewCoverOne.setImageBitmap(null);
+        imageViewCoverTwo.setImageBitmap(null);
+        imageViewCoverThree.setImageBitmap(null);
+        imageViewPlay.setVisibility(View.VISIBLE);
     }
 
     private void selectFile() {
@@ -390,7 +409,7 @@ public class VodUploadActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK && requestCode == 101) {
             Uri uri = data.getData();
-            realPath = getRealFilePath(this, uri);
+            String realPath = getRealFilePath(this, uri);
             if (realPath != null) {
                 ILog.iLogDebug(TAG, realPath);
 
@@ -476,6 +495,31 @@ public class VodUploadActivity extends Activity {
         frameLayoutProgress.setVisibility(View.GONE);
     }
 
+    private void clearBitMapCoverList() {
+        if(coverBitmapList != null) {
+            int total = coverBitmapList.size();
+            for (int i = total - 1; i >= 0; i--) {
+                Bitmap b = coverBitmapList.get(i);
+                if (b != null && !b.isRecycled()) {
+                    b.recycle();
+                }
+            }
+
+            coverBitmapList.clear();
+            coverBitmapList = null;
+        }
+    }
+
+    private void clearBitmapPreview() {
+        if(result != null && !result.isRecycled()) {
+            result.recycle();
+        }
+
+        if(preview != null && !preview.isRecycled()) {
+            preview.recycle();
+        }
+    }
+
     @Override
     protected void onDestroy() {
 
@@ -484,32 +528,8 @@ public class VodUploadActivity extends Activity {
             mediaMetadataRetriever = null;
         }
 
-        if(coverBitmapList != null) {
-            ThreadUtil.startThread(new Runnable() {
-                @Override
-                public void run() {
-
-                    int total = coverBitmapList.size();
-                    for (int i = total - 1; i >= 0; i--) {
-                        Bitmap b = coverBitmapList.get(i);
-                        if (b != null && !b.isRecycled()) {
-                            b.recycle();
-                        }
-                    }
-
-                    coverBitmapList.clear();
-                    coverBitmapList = null;
-
-                    if(result != null && !result.isRecycled()) {
-                        result.recycle();
-                    }
-
-                    if(cover != null && !cover.isRecycled()) {
-                        cover.recycle();
-                    }
-                }
-            });
-        }
+        clearBitMapCoverList();
+        clearBitmapPreview();
 
         if(shVideoView != null) {
             shVideoView.release();

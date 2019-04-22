@@ -30,7 +30,7 @@
         >
 
         <ImageView
-            android:id="@+id/imageViewCover"
+            android:id="@+id/imageViewPreview"
             android:scaleType="fitCenter"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
@@ -47,7 +47,7 @@
 
         <View
             android:clickable="true"
-            android:id="@+id/viewPlayerCover"
+            android:id="@+id/viewPlayerPreview"
             android:background="@color/transparent"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

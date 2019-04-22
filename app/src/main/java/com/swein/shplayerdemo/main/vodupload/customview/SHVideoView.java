@@ -172,7 +172,7 @@ public class SHVideoView extends SurfaceView {
             max = Math.max((float) videoWidth / (float) surfaceWidth, (float) videoHeight / (float) surfaceHeight);
         }
         else {
-            //横屏模式下按视频高度计算放大倍数值
+
             max = Math.max(((float) videoWidth / (float) surfaceHeight), (float) videoHeight / (float) surfaceWidth);
         }
 
@@ -183,7 +183,6 @@ public class SHVideoView extends SurfaceView {
         params.addRule(RelativeLayout.CENTER_VERTICAL, R.id.shVideoViewRelativeLayoutParent);
         setLayoutParams(params);
     }
-
 
     public void release() {
         if (player != null) {
