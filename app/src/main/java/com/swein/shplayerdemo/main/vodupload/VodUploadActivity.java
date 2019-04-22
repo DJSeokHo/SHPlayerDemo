@@ -32,7 +32,7 @@ public class VodUploadActivity extends Activity {
 
     private final static String TAG = "VodUploadActivity";
 
-    private final static int MAX_SEEKBAR_PREVIEW_NUMBER = 10;
+    private final static int MAX_SEEK_BAR_PREVIEW_NUMBER = 10;
     private final static int MAX_SELECT_COVER_NUMBER = 3;
 
     private MediaMetadataRetriever mediaMetadataRetriever;
@@ -46,8 +46,8 @@ public class VodUploadActivity extends Activity {
     private FrameLayout frameLayoutProgress;
 
     private List<Bitmap> tempBitmapList;
-
     private List<Bitmap> coverBitmapList;
+
     private Bitmap result;
     private Bitmap preview;
 
@@ -257,8 +257,8 @@ public class VodUploadActivity extends Activity {
         List<Float> coverList = new ArrayList<>();
 
 
-        for (int i = 1; i <= MAX_SEEKBAR_PREVIEW_NUMBER; i++) {
-            previewList.add((float) (durations / MAX_SEEKBAR_PREVIEW_NUMBER * i));
+        for (int i = 1; i <= MAX_SEEK_BAR_PREVIEW_NUMBER; i++) {
+            previewList.add((float) (durations / MAX_SEEK_BAR_PREVIEW_NUMBER * i));
         }
 
         for (int i = 1; i <= MAX_SELECT_COVER_NUMBER; i++) {
