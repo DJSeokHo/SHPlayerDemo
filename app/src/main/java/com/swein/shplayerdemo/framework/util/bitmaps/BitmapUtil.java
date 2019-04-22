@@ -9,6 +9,7 @@ import android.graphics.Matrix;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.media.ExifInterface;
+import android.media.MediaMetadataRetriever;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Created by seokho on 10/11/2016.
@@ -253,6 +255,42 @@ public class BitmapUtil {
     public static Bitmap getBitmapFromByte(byte[] data) {
         return BitmapFactory.decodeByteArray(data, 0, data.length);
     }
+
+
+    public static Bitmap extractFrame(float ms, MediaMetadataRetriever mediaMetadataRetriever) {
+
+        //OPTION_CLOSEST ,在给定的时间，检索最近一个帧,这个帧不一定是关键帧。
+        //OPTION_CLOSEST_SYNC   在给定的时间，检索最近一个同步与数据源相关联的的帧（关键帧）
+        //OPTION_NEXT_SYNC 在给定时间之后检索一个同步与数据源相关联的关键帧。
+        //OPTION_PREVIOUS_SYNC 在给定时间之前检索一个同步与数据源相关联的关键帧。
+
+        Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime((long) (ms * 1000), MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+        return bitmap;
+    }
+
+    public static Bitmap concatBitmaps(int margin, List<Bitmap> bitmaps) {
+        int width = 0;
+        int height = 0;
+        int leng = bitmaps.size();
+        for (int i = 0; i < leng; i++) {
+            width += bitmaps.get(i).getWidth();
+            width += margin;
+            height = Math.max(height, bitmaps.get(i).getHeight());
+        }
+        width -= margin;
+        Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(result);
+        int left = 0;
+        for (int i = 0; i < leng; i++) {
+            if (i > 0) {
+                left += bitmaps.get(i - 1).getWidth();
+                left += margin;
+            }
+            canvas.drawBitmap(bitmaps.get(i), left, (height - bitmaps.get(i).getHeight()), null);
+        }
+        return result;
+    }
+
 
 
 }

@@ -2,19 +2,14 @@ package com.swein.shplayerdemo.main.vodupload;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.view.View;
 import android.widget.Button;
@@ -25,18 +20,20 @@ import android.widget.SeekBar;
 import com.swein.shplayerdemo.R;
 import com.swein.shplayerdemo.framework.util.bitmaps.BitmapUtil;
 import com.swein.shplayerdemo.framework.util.debug.log.ILog;
+import com.swein.shplayerdemo.framework.util.files.FilesUtil;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
 import com.swein.shplayerdemo.main.vodupload.customview.SHVideoView;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 public class VodUploadActivity extends Activity {
 
     private final static String TAG = "VodUploadActivity";
+
+    private final static int MAX_SEEKBAR_PREVIEW_NUMBER = 10;
+    private final static int MAX_SELECT_COVER_NUMBER = 3;
 
     private MediaMetadataRetriever mediaMetadataRetriever;
 
@@ -66,8 +63,15 @@ public class VodUploadActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vod_upload);
 
+        initData();
         findView();
+        initSeekBar();
+        setListener();
         disableSeekBar();
+    }
+
+    private void initData() {
+        mediaMetadataRetriever = new MediaMetadataRetriever();
     }
 
     private void findView() {
@@ -86,7 +90,9 @@ public class VodUploadActivity extends Activity {
         imageViewPlay = findViewById(R.id.imageViewPlay);
         viewPlayerPreview = findViewById(R.id.viewPlayerPreview);
         imageViewPreview = findViewById(R.id.imageViewPreview);
+    }
 
+    private void setListener() {
         viewPlayerPreview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -129,7 +135,9 @@ public class VodUploadActivity extends Activity {
                 selectFile();
             }
         });
+    }
 
+    private void initSeekBar() {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
 
             boolean isTouch = false;
@@ -199,60 +207,19 @@ public class VodUploadActivity extends Activity {
             public void run() {
 
                 while (shVideoView.isPlaying()) {
-                    try {
-                        Thread.sleep(100);
-                        ThreadUtil.startUIThread(0, new Runnable() {
-                            @Override
-                            public void run() {
-                                seekBar.setProgress((int) (shVideoView.getCurrentPosition() * 0.001));
-                            }
-                        });
-                    }
-                    catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                    ThreadUtil.startUIThread(1000, new Runnable() {
+                        @Override
+                        public void run() {
+                            seekBar.setProgress((int) (shVideoView.getCurrentPosition() * 0.001));
+                        }
+                    });
                 }
-
             }
         });
     }
 
-    private Bitmap extractFrame(float ms) {
-
-        //OPTION_CLOSEST ,在给定的时间，检索最近一个帧,这个帧不一定是关键帧。
-        //OPTION_CLOSEST_SYNC   在给定的时间，检索最近一个同步与数据源相关联的的帧（关键帧）
-        //OPTION_NEXT_SYNC 在给定时间之后检索一个同步与数据源相关联的关键帧。
-        //OPTION_PREVIOUS_SYNC 在给定时间之前检索一个同步与数据源相关联的关键帧。
-
-        Bitmap bitmap = mediaMetadataRetriever.getFrameAtTime((long) (ms * 1000), MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
-        return bitmap;
-    }
-
-    private Bitmap concatBitmaps(int margin, List<Bitmap> bitmaps) {
-        int width = 0;
-        int height = 0;
-        int leng = bitmaps.size();
-        for (int i = 0; i < leng; i++) {
-            width += bitmaps.get(i).getWidth();
-            width += margin;
-            height = Math.max(height, bitmaps.get(i).getHeight());
-        }
-        width -= margin;
-        Bitmap result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(result);
-        int left = 0;
-        for (int i = 0; i < leng; i++) {
-            if (i > 0) {
-                left += bitmaps.get(i - 1).getWidth();
-                left += margin;
-            }
-            canvas.drawBitmap(bitmaps.get(i), left, (height - bitmaps.get(i).getHeight()), null);
-        }
-        return result;
-    }
-
     private void initPreview() {
-        preview = extractFrame(shVideoView.getCurrentPosition() * 1000);
+        preview = BitmapUtil.extractFrame(shVideoView.getCurrentPosition() * 1000, mediaMetadataRetriever);
         preview = BitmapUtil.getScaleBitmap(preview, (int) (preview.getWidth() * 0.1), (int) (preview.getHeight() * 0.1));
         imageViewPreview.setImageBitmap(preview);
     }
@@ -275,7 +242,6 @@ public class VodUploadActivity extends Activity {
         clearBitMapCoverList();
         clearBitmapPreview();
 
-        mediaMetadataRetriever = new MediaMetadataRetriever();
         mediaMetadataRetriever.setDataSource(file.getAbsolutePath());
         String duration = mediaMetadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         ILog.iLogDebug(TAG, duration);
@@ -287,17 +253,16 @@ public class VodUploadActivity extends Activity {
 
         ILog.iLogDebug(TAG, durations);
 
-        List<Float> floatList = new ArrayList<>();
-
+        List<Float> previewList = new ArrayList<>();
         List<Float> coverList = new ArrayList<>();
 
 
-        for (int i = 1; i <= 10; i++) {
-            floatList.add((float) (durations * 0.1 * i));
+        for (int i = 1; i <= MAX_SEEKBAR_PREVIEW_NUMBER; i++) {
+            previewList.add((float) (durations / MAX_SEEKBAR_PREVIEW_NUMBER * i));
         }
 
-        for (int i = 1; i <= 3; i++) {
-            coverList.add((float) (durations * 0.33333 * i));
+        for (int i = 1; i <= MAX_SELECT_COVER_NUMBER; i++) {
+            coverList.add((float) (durations / MAX_SELECT_COVER_NUMBER * i));
         }
 
         showProgressBar();
@@ -308,13 +273,13 @@ public class VodUploadActivity extends Activity {
 
                 tempBitmapList = new ArrayList<>();
 
-                for (int i = 0; i < floatList.size(); i++) {
-                    ILog.iLogDebug(TAG, floatList.get(i));
-                    Bitmap bitmap = extractFrame(floatList.get(i) * 1000);
+                for (int i = 0; i < previewList.size(); i++) {
+                    ILog.iLogDebug(TAG, previewList.get(i));
+                    Bitmap bitmap = BitmapUtil.extractFrame(previewList.get(i) * 1000, mediaMetadataRetriever);
                     bitmap = BitmapUtil.getScaleBitmap(bitmap, (int) (bitmap.getWidth() * 0.1), (int) (bitmap.getHeight() * 0.1));
                     tempBitmapList.add(bitmap);
 
-                    result = concatBitmaps(0, tempBitmapList);
+                    result = BitmapUtil.concatBitmaps(0, tempBitmapList);
                     ILog.iLogDebug(TAG, result.getWidth() + " " + result.getHeight());
                 }
 
@@ -358,7 +323,7 @@ public class VodUploadActivity extends Activity {
 
                 for (int i = 0; i < coverList.size(); i++) {
                     ILog.iLogDebug(TAG, coverList.get(i));
-                    Bitmap bitmap = extractFrame(coverList.get(i) * 1000);
+                    Bitmap bitmap = BitmapUtil.extractFrame(coverList.get(i) * 1000, mediaMetadataRetriever);
                     bitmap = BitmapUtil.getScaleBitmap(bitmap, (int) (bitmap.getWidth() * 0.1), (int) (bitmap.getHeight() * 0.1));
                     coverBitmapList.add(bitmap);
                 }
@@ -409,7 +374,7 @@ public class VodUploadActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == Activity.RESULT_OK && requestCode == 101) {
             Uri uri = data.getData();
-            String realPath = getRealFilePath(this, uri);
+            String realPath = FilesUtil.getRealFilePath(this, uri);
             if (realPath != null) {
                 ILog.iLogDebug(TAG, realPath);
 
@@ -417,7 +382,7 @@ public class VodUploadActivity extends Activity {
                 ILog.iLogDebug(TAG, file.exists() + " " + file.isFile() + " " + file.getAbsolutePath());
 
                 try {
-                    ILog.iLogDebug(TAG, formatFileSize(getFileSize(file)));
+                    ILog.iLogDebug(TAG, FilesUtil.formatFileSize(FilesUtil.getFileSize(file)));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -427,65 +392,7 @@ public class VodUploadActivity extends Activity {
         }
     }
 
-    private static long getFileSize(File file) throws Exception {
-        long size = 0;
-        if (file.exists()) {
-            FileInputStream fis = null;
-            fis = new FileInputStream(file);
-            size = fis.available();
-        }
 
-        return size;
-    }
-
-    private String formatFileSize(long fileS) {
-        DecimalFormat df = new DecimalFormat("#.00");
-        String fileSizeString = "";
-        String wrongSize = "0B";
-        if (fileS == 0) {
-            return wrongSize;
-        }
-        if (fileS < 1024) {
-            fileSizeString = df.format((double) fileS) + "B";
-        } else if (fileS < 1048576) {
-            fileSizeString = df.format((double) fileS / 1024) + "KB";
-        } else if (fileS < 1073741824) {
-            fileSizeString = df.format((double) fileS / 1048576) + "MB";
-        } else {
-            fileSizeString = df.format((double) fileS / 1073741824) + "GB";
-        }
-        return fileSizeString;
-    }
-
-
-    public String getRealFilePath(final Context context, final Uri uri) {
-        if (null == uri) return null;
-        final String scheme = uri.getScheme();
-        String data = null;
-
-        if (scheme == null) {
-            data = uri.getPath();
-        } else if (ContentResolver.SCHEME_FILE.equals(scheme)) {
-            data = uri.getPath();
-        } else if (ContentResolver.SCHEME_CONTENT.equals(scheme)) {
-
-            Cursor cursor = context.getContentResolver().query(uri, new String[]{MediaStore.Images.ImageColumns.DATA}, null, null, null);
-
-            if (null != cursor) {
-
-                if (cursor.moveToFirst()) {
-
-                    int index = cursor.getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-
-                    if (index > -1) {
-                        data = cursor.getString(index);
-                    }
-                }
-                cursor.close();
-            }
-        }
-        return data;
-    }
 
     private void showProgressBar() {
         frameLayoutProgress.setVisibility(View.VISIBLE);
