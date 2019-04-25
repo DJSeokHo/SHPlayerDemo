@@ -110,6 +110,7 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
         }
     }
 
+
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

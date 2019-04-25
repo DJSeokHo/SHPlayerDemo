@@ -19,6 +19,7 @@ import com.swein.shplayerdemo.framework.util.intent.IntentUtil;
 import com.swein.shplayerdemo.framework.util.size.DensityUtil;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
 import com.swein.shplayerdemo.main.biglistitem.ListAutoTinyWindowActivity;
+import com.swein.shplayerdemo.main.bjlive.BJLiveActivity;
 import com.swein.shplayerdemo.main.floatingview.live.FloatingViewHolder;
 import com.swein.shplayerdemo.main.headautoplayer.live.HeaderAutoPlayerActivity;
 import com.swein.shplayerdemo.main.headautoplayer.vod.VODAutoPlayerActivity;
@@ -37,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonVODHeadAuto;
     private Button buttonWatchDetail;
     private Button buttonListAuto;
+    private Button buttonBJLive;
 
     private WindowManager.LayoutParams layoutParams;
     private WindowManager windowManager;
@@ -111,8 +113,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        buttonBJLive = findViewById(R.id.buttonBJLive);
+        buttonBJLive.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ActivityUtil.startNewActivityWithFinish(MainActivity.this, BJLiveActivity.class);
+            }
+        });
 //        ActivityUtil.startNewActivityWithFinish(this, VodUploadActivity.class);
-//        ActivityUtil.startNewActivityWithFinish(this, BJLiveActivity.class);
+        ActivityUtil.startNewActivityWithFinish(this, BJLiveActivity.class);
 
     }
 

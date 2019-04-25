@@ -40,10 +40,14 @@ public class SrsPublisher {
                 calcSamplingFps();
                 if (!sendAudioOnly) {
                     mEncoder.onGetRgbaFrame(data, width, height);
+
                 }
             }
+
         });
+
     }
+
 
     private void calcSamplingFps() {
         // Calculate sampling FPS
