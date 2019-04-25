@@ -1,2 +1,3 @@
-include ':app', ':jiaozivideoplayerlib'
+include ':app', ':jiaozivideoplayerlib', ':yasea-lib'
 project(':jiaozivideoplayerlib').projectDir = new File('jiaozivideoplayer')
+project(':yasea-lib').projectDir = new File('yasea-library')

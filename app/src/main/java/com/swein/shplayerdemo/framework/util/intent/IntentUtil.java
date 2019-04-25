@@ -13,12 +13,12 @@ import android.support.v4.app.TaskStackBuilder;
 
 public class IntentUtil {
 
-    public static void intentStartActionBackToHome(Activity activity) {
+    public static void intentStartActionBackToHome(Context context) {
 
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
-        activity.startActivity(intent);
+        context.startActivity(intent);
 
     }
 

@@ -12,4 +12,5 @@ package com.swein.shplayerdemo.framework.util.eventsplitshot.subject;
 public class ESSArrows {
 
     public final static String EXIT_APP = "EXIT_APP";
+    public final static String OPEN_FLOATING_WINDOW = "OPEN_FLOATING_WINDOW";
 }
