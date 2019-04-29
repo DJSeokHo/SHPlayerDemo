@@ -2,15 +2,15 @@ package com.seu.magicfilter.advanced;
 
 import android.opengl.GLES20;
 
-import com.seu.magicfilter.utils.MagicFilterType;
-import net.ossrs.yasea.R;
-
 import com.seu.magicfilter.base.gpuimage.GPUImageFilter;
+import com.seu.magicfilter.utils.MagicFilterType;
 import com.seu.magicfilter.utils.OpenGLUtils;
 
+import net.ossrs.yasea.R;
+
 public class MagicEarlyBirdFilter extends GPUImageFilter{
-    private int[] inputTextureHandles = {-1,-1,-1,-1,-1};
-    private int[] inputTextureUniformLocations = {-1,-1,-1,-1,-1};
+    private int[] inputTextureHandles = {-1,-1,-1,-1,-1,-1};
+    private int[] inputTextureUniformLocations = {-1,-1,-1,-1,-1,-1};
     protected int mGLStrengthLocation;
 
     public MagicEarlyBirdFilter(){

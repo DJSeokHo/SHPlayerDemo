@@ -17,6 +17,8 @@ import com.seu.magicfilter.utils.OpenGLUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -27,10 +29,11 @@ import javax.microedition.khronos.opengles.GL10;
 /**
  * Created by Leo Ma on 2016/2/25.
  */
-public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Renderer {
+public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
 
     private GPUImageFilter magicFilter;
     private SurfaceTexture surfaceTexture;
+
     private int mOESTextureId = OpenGLUtils.NO_TEXTURE;
     private int mSurfaceWidth;
     private int mSurfaceHeight;
@@ -55,9 +58,62 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
     private ConcurrentLinkedQueue<IntBuffer> mGLIntBufferCache = new ConcurrentLinkedQueue<>();
     private PreviewCallback mPrevCb;
 
+
+    private static final int POSITION_COMPONENT_COUNT = 2;
+
+    private static final String U_COLOR = "u_Color";
+    private int uColorLocation;
+
+    private static final  String A_POSITION = "a_Position";
+    private int aPositionLocation;
+
+    private static final int BYTES_PER_FLOAT = 4;
+    private FloatBuffer vertexData;
+
+//    float[] tableVerticesWithTriangle = {
+//            0f, 0f,
+//            9f, 14f,
+//            0f, 14f,
+//
+//            0f, 0f,
+//            9f, 0f,
+//            9f, 14f,
+//
+//            0f, 7f,
+//            9f, 7f,
+//
+//            4.5f, 2f,
+//            4.5f, 12f
+//    };
+
+    float[] tableVerticesWithTriangle = {
+            -0.5f, -0.5f,
+            0.5f, 0.5f,
+            -0.5f, 0.5f,
+
+            -0.5f, -0.5f,
+            0.5f, -0.5f,
+            0.5f, 0.5f,
+
+            -0.5f, 0f,
+            0.5f, 0f,
+
+            0f, -0.25f,
+            0f, 0.25f
+    };
+
+    String vertexShaderSource;
+    String fragmentShaderSource;
+    int vertexShader;
+    int fragmentShader;
+
+    int programObjectId;
+
+
     public SrsCameraView(Context context) {
         this(context, null);
     }
+
 
     public SrsCameraView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -65,7 +121,9 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
         setEGLContextClientVersion(2);
         setRenderer(this);
         setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
     }
+
 
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -75,14 +133,10 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
         magicFilter = new GPUImageFilter(MagicFilterType.NONE);
         magicFilter.init(getContext().getApplicationContext());
         magicFilter.onInputSizeChanged(mPreviewWidth, mPreviewHeight);
+
         mOESTextureId = OpenGLUtils.getExternalOESTextureID();
         surfaceTexture = new SurfaceTexture(mOESTextureId);
-        surfaceTexture.setOnFrameAvailableListener(new SurfaceTexture.OnFrameAvailableListener() {
-            @Override
-            public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-                requestRender();
-            }
-        });
+        surfaceTexture.setOnFrameAvailableListener(this);
 
         // For camera preview on activity creation
         if (mCamera != null) {
@@ -92,10 +146,37 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
                 ioe.printStackTrace();
             }
         }
+
+
+
+        vertexData = ByteBuffer.allocateDirect(tableVerticesWithTriangle.length * BYTES_PER_FLOAT)
+        .order(ByteOrder.nativeOrder()).asFloatBuffer();
+
+        vertexData.put(tableVerticesWithTriangle);
+
+
+        vertexShaderSource = OpenGLUtils.readShaderFromRawResource(getContext(), R.raw.simple_vertex_shader);
+        fragmentShaderSource = OpenGLUtils.readShaderFromRawResource(getContext(), R.raw.simple_fragment_shader);
+        vertexShader = OpenGLUtils.compileShader(vertexShaderSource,  GLES20.GL_VERTEX_SHADER);
+        fragmentShader = OpenGLUtils.compileShader(fragmentShaderSource,  GLES20.GL_FRAGMENT_SHADER);
+        programObjectId = GLES20.glCreateProgram();
+
+        GLES20.glAttachShader(programObjectId, vertexShader);
+        GLES20.glAttachShader(programObjectId, fragmentShader);
+
+        uColorLocation = GLES20.glGetUniformLocation(programObjectId, U_COLOR);
+        aPositionLocation = GLES20.glGetAttribLocation(programObjectId, A_POSITION);
+
+        vertexData.position(0);
+        GLES20.glVertexAttribPointer(aPositionLocation, POSITION_COMPONENT_COUNT, GLES20.GL_FLOAT, false, 0, vertexData);
+        GLES20.glEnableVertexAttribArray(aPositionLocation);
+
     }
+
 
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
+
         GLES20.glViewport(0, 0, width, height);
         mSurfaceWidth = width;
         mSurfaceHeight = height;
@@ -111,17 +192,28 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
     }
 
 
+
     @Override
     public void onDrawFrame(GL10 gl) {
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
-        surfaceTexture.updateTexImage();
+//        surfaceTexture.updateTexImage();
 
-        surfaceTexture.getTransformMatrix(mSurfaceMatrix);
-        Matrix.multiplyMM(mTransformMatrix, 0, mSurfaceMatrix, 0, mProjectionMatrix, 0);
-        magicFilter.setTextureTransformMatrix(mTransformMatrix);
-        magicFilter.onDrawFrame(mOESTextureId);
+//        surfaceTexture.getTransformMatrix(mSurfaceMatrix);
+//        Matrix.multiplyMM(mTransformMatrix, 0, mSurfaceMatrix, 0, mProjectionMatrix, 0);
+//        magicFilter.setTextureTransformMatrix(mTransformMatrix);
+//        magicFilter.onDrawFrame(mOESTextureId);
+
+        GLES20.glUniform4f(uColorLocation, 1.0f, 1.0f, 1.0f, 1.0f);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 6);
+
+        GLES20.glUniform4f(uColorLocation, 0.0f, 0.0f, 1.0f, 1.0f);
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 8, 1);
+
+        GLES20.glUniform4f(uColorLocation, 1.0f, 0.0f, 0.0f, 1.0f);
+        GLES20.glDrawArrays(GLES20.GL_POINTS, 9, 1);
+
 
         if (mIsEncoding) {
             mGLIntBufferCache.add(magicFilter.getGLFboBuffer());
@@ -129,7 +221,9 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
                 writeLock.notifyAll();
             }
         }
+
     }
+
 
     public void setPreviewCallback(PreviewCallback cb) {
         mPrevCb = cb;
@@ -176,6 +270,7 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
                 magicFilter = MagicFilterFactory.initFilters(type);
                 if (magicFilter != null) {
                     magicFilter.init(getContext().getApplicationContext());
+
                     magicFilter.onInputSizeChanged(mPreviewWidth, mPreviewHeight);
                     magicFilter.onDisplaySizeChanged(mSurfaceWidth, mSurfaceHeight);
                 }
@@ -419,6 +514,11 @@ public class SrsCameraView extends GLSurfaceView implements GLSurfaceView.Render
             params.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
             mCamera.setParameters(params);
         }
+    }
+
+    @Override
+    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+        requestRender();
     }
 
     public interface PreviewCallback {

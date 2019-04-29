@@ -331,7 +331,7 @@ static void x264_slice_header_write( bs_t *s, x264_slice_header_t *sh, int i_nal
             {
                 for( int i = 0; i < sh->i_mmco_command_count; i++ )
                 {
-                    bs_write_ue( s, 1 ); /* mark short term ref as unused */
+                    bs_write_ue( s, 1 ); /* water_mark short term ref as unused */
                     bs_write_ue( s, sh->mmco[i].i_difference_of_pic_nums - 1 );
                 }
                 bs_write_ue( s, 0 ); /* end command list */

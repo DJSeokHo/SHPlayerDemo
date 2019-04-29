@@ -302,7 +302,23 @@ public class GPUImageFilter {
         return mGLProgId;
     }
 
-    public IntBuffer getGLFboBuffer() {
+    public int getGLPositionIndex() {
+        return mGLPositionIndex;
+    }
+
+    public int getGLTextureCoordinateIndex() {
+        return mGLTextureCoordinateIndex;
+    }
+
+    public int getGLTextureTransformIndex() {
+        return mGLTextureTransformIndex;
+    }
+
+    public int getGLInputImageTextureIndex() {
+        return mGLInputImageTextureIndex;
+    }
+
+   public IntBuffer getGLFboBuffer() {
         return mGLFboBuffer;
     }
 

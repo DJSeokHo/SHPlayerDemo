@@ -1,13 +1,5 @@
 package com.seu.magicfilter.utils;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.Buffer;
-
-import javax.microedition.khronos.opengles.GL10;
-
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -16,6 +8,14 @@ import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
 import android.util.Log;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.Buffer;
+
+import javax.microedition.khronos.opengles.GL10;
 
 public class OpenGLUtils {
     public static final int NO_TEXTURE = -1;
@@ -45,7 +45,8 @@ public class OpenGLUtils {
             GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, img, 0);
         } else {
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, usedTexId);
-            GLUtils.texSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, img);
+//            GLUtils.texSubImage2D(GLES20.GL_TEXTURE_2D, 0, 0, 0, img);
+            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, img, 0);
             textures[0] = usedTexId;
         }
         if(recyled)
@@ -181,6 +182,19 @@ public class OpenGLUtils {
     }
 
     private static int loadShader(String strSource, int iType) {
+        int[] compiled = new int[1];
+        int iShader = GLES20.glCreateShader(iType);
+        GLES20.glShaderSource(iShader, strSource);
+        GLES20.glCompileShader(iShader);
+        GLES20.glGetShaderiv(iShader, GLES20.GL_COMPILE_STATUS, compiled, 0);
+        if (compiled[0] == 0) {
+            Log.e("Load Shader Failed", "Compilation\n" + GLES20.glGetShaderInfoLog(iShader));
+            return 0;
+        }
+        return iShader;
+    }
+
+    public static int compileShader(String strSource, int iType) {
         int[] compiled = new int[1];
         int iShader = GLES20.glCreateShader(iType);
         GLES20.glShaderSource(iShader, strSource);

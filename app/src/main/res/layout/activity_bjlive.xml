@@ -8,54 +8,5 @@
     android:background="@color/white"
     android:orientation="vertical">
 
-    <net.ossrs.yasea.SrsCameraView
-        android:id="@+id/srsCameraView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        />
-
-    <LinearLayout
-        android:layout_gravity="bottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:text="start"
-            android:id="@+id/buttonStart"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:text="stop"
-            android:id="@+id/buttonStop"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:text="filter"
-            android:id="@+id/buttonFilter"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:text="image"
-            android:id="@+id/buttonImage"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content" />
-
-        <Button
-            android:text="text"
-            android:id="@+id/buttonText"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
 
 </FrameLayout>
