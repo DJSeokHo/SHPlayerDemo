@@ -15,7 +15,6 @@ public class BJLiveActivity extends Activity {
 
     private final static String TAG = "BJLiveActivity";
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
