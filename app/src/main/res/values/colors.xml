@@ -8,4 +8,5 @@
     <color name="grey">#505050</color>
     <color name="transparent">#00000000</color>
     <color name="half_transparent_light_grey">#501B1B1B</color>
+    <color name="toast_custom_background_color">#b4000000</color>
 </resources>

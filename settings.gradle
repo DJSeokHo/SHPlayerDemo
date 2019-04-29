@@ -1,2 +1,3 @@
-include ':app', ':jiaozivideoplayerlib'
+include ':app', ':jiaozivideoplayerlib', ':sopcast'
 project(':jiaozivideoplayerlib').projectDir = new File('jiaozivideoplayer')
+project(':sopcast').projectDir = new File('sopcast-sdk')
