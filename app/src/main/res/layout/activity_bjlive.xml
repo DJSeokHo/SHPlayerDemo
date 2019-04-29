@@ -67,6 +67,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
+    <View
+        android:clickable="true"
+        android:id="@+id/viewCover"
+        android:background="@color/transparent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true" />
+
     <ProgressBar
         android:visibility="gone"
         android:layout_gravity="center"

@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -15,6 +16,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 
+import com.laifeng.sopcastsdk.camera.CameraHolder;
 import com.laifeng.sopcastsdk.camera.CameraListener;
 import com.laifeng.sopcastsdk.configuration.AudioConfiguration;
 import com.laifeng.sopcastsdk.configuration.CameraConfiguration;
@@ -44,6 +46,8 @@ public class BJLiveActivity extends Activity {
             Manifest.permission.WAKE_LOCK};
     private List<String> permissionList = new ArrayList<>();
 
+    private View viewCover;
+
     private Button buttonMic;
     private Button buttonFlash;
     private Button buttonSwitch;
@@ -55,8 +59,10 @@ public class BJLiveActivity extends Activity {
 
     private CameraLivingView cameraLivingView;
     private GestureDetector gestureDetector;
+
     private GrayEffect grayEffect;
     private NullEffect nullEffect;
+
     private boolean isGray;
     private boolean isRecording;
     private boolean isMute = false;
@@ -82,12 +88,13 @@ public class BJLiveActivity extends Activity {
         else {
             init();
         }
-
     }
 
     private void init() {
+
         initEffects();
         findViews();
+
         initCameraView();
     }
 
@@ -99,6 +106,21 @@ public class BJLiveActivity extends Activity {
     private void findViews() {
 
         cameraLivingView = findViewById(R.id.cameraLivingView);
+
+        viewCover = findViewById(R.id.viewCover);
+        viewCover.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                if (event.getAction() == MotionEvent.ACTION_UP)
+                {
+                    // 1920 1080 is max
+                    ILog.iLogDebug(TAG, event.getX() + " " + event.getY());
+                }
+
+                return false;
+            }
+        });
 
         buttonMic = findViewById(R.id.buttonMic);
         buttonMic.setOnClickListener(new View.OnClickListener() {
@@ -175,6 +197,7 @@ public class BJLiveActivity extends Activity {
                     buttonRecord.setText("STOP");
                     rtmpSender.connect();
                     isRecording = true;
+
                 }
             }
         });
@@ -182,29 +205,60 @@ public class BJLiveActivity extends Activity {
         progressBar = findViewById(R.id.progressBar);
     }
 
+    private void setWaterMark(Bitmap bitmap, int width, int height) {
+        Watermark watermark = new Watermark(bitmap, width, height, WatermarkPosition.WATERMARK_ORIENTATION_BOTTOM_RIGHT, 100, 100);
+        cameraLivingView.setWatermark(watermark);
+    }
+
+    /**
+     * must check camera null
+     * @param width
+     * @param height
+     */
+    private void setCameraSize(int width, int height) {
+        VideoConfiguration.Builder videoBuilder = new VideoConfiguration.Builder();
+        videoBuilder.setSize(width, height);
+        videoConfiguration = videoBuilder.build();
+        cameraLivingView.setVideoConfiguration(videoConfiguration);
+    }
+
+    /**
+     * must check camera null
+     */
+    private void setBestCameraSize() {
+
+        Camera.Parameters params = CameraHolder.instance().getmCameraDevice().getParameters();
+        List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
+        for(int i = 0; i < previewSizes.size(); i++) {
+            ILog.iLogDebug(TAG, String.valueOf(previewSizes.get(i).width) + " " + String.valueOf(previewSizes.get(i).height));
+        }
+
+        setCameraSize(previewSizes.get(0).width, previewSizes.get(0).height);
+    }
+
     private void initCameraView() {
+
         cameraLivingView.init();
+
         CameraConfiguration.Builder cameraBuilder = new CameraConfiguration.Builder();
         cameraBuilder.setOrientation(CameraConfiguration.Orientation.LANDSCAPE)
                 .setFacing(CameraConfiguration.Facing.BACK);
         CameraConfiguration cameraConfiguration = cameraBuilder.build();
         cameraLivingView.setCameraConfiguration(cameraConfiguration);
 
-        VideoConfiguration.Builder videoBuilder = new VideoConfiguration.Builder();
-        videoBuilder.setSize(1280, 720);
-        videoConfiguration = videoBuilder.build();
-        cameraLivingView.setVideoConfiguration(videoConfiguration);
 
-        // set water mark
-        Bitmap watermarkImg = BitmapFactory.decodeResource(getResources(), R.drawable.water_mark);
-        Watermark watermark = new Watermark(watermarkImg, 200, 150, WatermarkPosition.WATERMARK_ORIENTATION_BOTTOM_RIGHT, 8, 8);
-        cameraLivingView.setWatermark(watermark);
 
         // set camera open listener
         cameraLivingView.setCameraOpenListener(new CameraListener() {
             @Override
             public void onOpenSuccess() {
                 ToastUtil.showShortToastNormal(BJLiveActivity.this, "camera open success");
+
+                setBestCameraSize();
+
+                Bitmap watermarkImg = BitmapFactory.decodeResource(getResources(), R.drawable.water_mark);
+                setWaterMark(watermarkImg, 200, 150);
+
             }
 
             @Override
@@ -256,23 +310,8 @@ public class BJLiveActivity extends Activity {
         rtmpSender.start();
     }
 
-    public class GestureListener extends GestureDetector.SimpleOnGestureListener {
-
-        @Override
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-            if (e1.getX() - e2.getX() > 100 && Math.abs(velocityX) > 200) {
-                // Fling left
-                ToastUtil.showShortToastNormal(BJLiveActivity.this, "Fling Left");
-            } else if (e2.getX() - e1.getX() > 100 && Math.abs(velocityX) > 200) {
-                // Fling right
-                ToastUtil.showShortToastNormal(BJLiveActivity.this, "Fling Right");
-            }
-
-            return super.onFling(e1, e2, velocityX, velocityY);
-        }
-    }
-
     private RtmpSender.OnSenderListener senderListener = new RtmpSender.OnSenderListener() {
+
         @Override
         public void onConnecting() {
 
@@ -379,5 +418,21 @@ public class BJLiveActivity extends Activity {
         super.onDestroy();
         cameraLivingView.stop();
         cameraLivingView.release();
+    }
+
+    public class GestureListener extends GestureDetector.SimpleOnGestureListener {
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            if (e1.getX() - e2.getX() > 100 && Math.abs(velocityX) > 200) {
+                // Fling left
+                ToastUtil.showShortToastNormal(BJLiveActivity.this, "Fling Left");
+            } else if (e2.getX() - e1.getX() > 100 && Math.abs(velocityX) > 200) {
+                // Fling right
+                ToastUtil.showShortToastNormal(BJLiveActivity.this, "Fling Right");
+            }
+
+            return super.onFling(e1, e2, velocityX, velocityY);
+        }
     }
 }

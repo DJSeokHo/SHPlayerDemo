@@ -60,8 +60,13 @@ public class RenderSrfTex {
     }
 
     public void setWatermark(Watermark watermark) {
-        mWatermarkImg = watermark.markImg;
-        initWatermarkVertexBuffer(watermark.width, watermark.height, watermark.orientation, watermark.vMargin, watermark.hMargin);
+        if(watermark !=null) {
+            mWatermarkImg = watermark.markImg;
+            initWatermarkVertexBuffer(watermark.width, watermark.height, watermark.orientation, watermark.vMargin, watermark.hMargin);
+        }
+        else {
+            mWatermarkImg = null;
+        }
     }
 
     private void initWatermarkVertexBuffer(int width, int height, int orientation, int vMargin, int hMargin) {

@@ -3,6 +3,7 @@ package com.laifeng.sopcastsdk.video;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import com.laifeng.sopcastsdk.camera.CameraData;
 import com.laifeng.sopcastsdk.camera.CameraHolder;
@@ -111,8 +112,13 @@ public class RenderScreen {
 
     public void setWatermark(Watermark watermark) {
         mWatermark = watermark;
-        mWatermarkImg = watermark.markImg;
-        initWatermarkVertexBuffer();
+        if(mWatermark != null) {
+            mWatermarkImg = watermark.markImg;
+            initWatermarkVertexBuffer();
+        }
+        else {
+            mWatermarkImg = null;
+        }
     }
 
     private void initWatermarkVertexBuffer() {
@@ -124,6 +130,8 @@ public class RenderScreen {
         int height = (int) (mWatermark.height*mWatermarkRatio);
         int vMargin = (int) (mWatermark.vMargin*mWatermarkRatio);
         int hMargin = (int) (mWatermark.hMargin*mWatermarkRatio);
+
+        Log.d("???", width + " " + height + " " + vMargin + " " + hMargin);
 
         boolean isTop, isRight;
         if(mWatermark.orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_LEFT
@@ -148,6 +156,8 @@ public class RenderScreen {
 
         float temp;
 
+        Log.d("???", leftX + " " + rightX + " " + topY + " " + bottomY);
+
         if(!isRight) {
             temp = leftX;
             leftX = -rightX;
@@ -158,12 +168,29 @@ public class RenderScreen {
             topY = -bottomY;
             bottomY = -temp;
         }
+
+        Log.d("???", leftX + " " + rightX + " " + topY + " " + bottomY);
+
+
+        Log.d("???", "left bottom : " + leftX + ":" + bottomY);
+        Log.d("???", "left top : " + leftX + ":" + topY);
+        Log.d("???", "right bottom : " + rightX + ":" + bottomY);
+        Log.d("???", "right top : " + rightX + ":" + topY);
+
+//        final float watermarkCoords[]= {
+//                leftX,  bottomY, 0.0f,
+//                leftX, topY, 0.0f,
+//                rightX,  bottomY, 0.0f,
+//                rightX, topY, 0.0f
+//        };
+
         final float watermarkCoords[]= {
-                leftX,  bottomY, 0.0f,
-                leftX, topY, 0.0f,
-                rightX,  bottomY, 0.0f,
-                rightX, topY, 0.0f
+                -0.5f,  -0.5f, 0.0f,    // left bottom
+                -0.5f, 0.5f, 0.0f,      // left top
+                0.5f,  -0.5f, 0.0f,     // right bottom
+                0.5f, 0.5f, 0.0f        // right top
         };
+
         ByteBuffer bb = ByteBuffer.allocateDirect(watermarkCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         mWatermarkVertexBuffer = bb.asFloatBuffer();

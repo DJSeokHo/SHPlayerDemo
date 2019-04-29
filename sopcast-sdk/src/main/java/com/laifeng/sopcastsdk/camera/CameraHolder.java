@@ -43,8 +43,14 @@ public class CameraHolder {
         return sHolder;
     }
 
+
+
     private CameraHolder() {
         mState = State.INIT;
+    }
+
+    public Camera getmCameraDevice() {
+        return mCameraDevice;
     }
 
     public int getNumberOfCameras() {
