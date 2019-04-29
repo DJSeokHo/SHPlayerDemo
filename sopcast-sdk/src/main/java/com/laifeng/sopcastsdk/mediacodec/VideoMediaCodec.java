@@ -10,15 +10,6 @@ import com.laifeng.sopcastsdk.constant.SopCastConstant;
 import com.laifeng.sopcastsdk.blacklist.BlackListHelper;
 import com.laifeng.sopcastsdk.utils.SopCastLog;
 
-/**
- * @Title: VideoMediaCodec
- * @Package com.laifeng.sopcastsdk.hw
- * @Description:
- * @Author Jim
- * @Date 16/6/2
- * @Time 下午6:07
- * @Version
- */
 @TargetApi(18)
 public class VideoMediaCodec {
 
@@ -30,7 +21,7 @@ public class VideoMediaCodec {
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
         format.setInteger(MediaFormat.KEY_BIT_RATE, videoConfiguration.maxBps* 1024);
         int fps = videoConfiguration.fps;
-        //设置摄像头预览帧率
+
         if(BlackListHelper.deviceInFpsBlacklisted()) {
             SopCastLog.d(SopCastConstant.TAG, "Device in fps setting black list, so set mediacodec fps 15");
             fps = 15;

@@ -4,21 +4,11 @@ import android.os.Build;
 
 import com.laifeng.sopcastsdk.configuration.VideoConfiguration;
 import com.laifeng.sopcastsdk.constant.SopCastConstant;
-import com.laifeng.sopcastsdk.controller.video.IVideoController;
 import com.laifeng.sopcastsdk.utils.SopCastLog;
 import com.laifeng.sopcastsdk.video.MyRecorder;
 import com.laifeng.sopcastsdk.video.MyRenderer;
 import com.laifeng.sopcastsdk.video.OnVideoEncodeListener;
 
-/**
- * @Title: CameraVideoController
- * @Package com.laifeng.sopcastsdk.controller.video
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 下午12:54
- * @Version
- */
 public class CameraVideoController implements IVideoController {
     private MyRecorder mRecorder;
     private MyRenderer mRenderer;
@@ -75,10 +65,10 @@ public class CameraVideoController implements IVideoController {
     }
 
     public boolean setVideoBps(int bps) {
-        //重新设置硬编bps，在低于19的版本需要重启编码器
+
         boolean result = false;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            //由于重启硬编编码器效果不好，此次不做处理
+
             SopCastLog.d(SopCastConstant.TAG, "Bps need change, but MediaCodec do not support.");
         }else {
             if (mRecorder != null) {

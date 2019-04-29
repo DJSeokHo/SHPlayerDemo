@@ -13,15 +13,6 @@ import com.laifeng.sopcastsdk.utils.SopCastLog;
 import com.laifeng.sopcastsdk.video.MyRenderer;
 import com.laifeng.sopcastsdk.video.effect.Effect;
 
-/**
- * @Title: RenderSurfaceView
- * @Package com.laifeng.sopcastsdk.ui
- * @Description:
- * @Author Jim
- * @Date 16/9/18
- * @Time 下午5:12
- * @Version
- */
 public class RenderSurfaceView extends GLSurfaceView {
     private MyRenderer mRenderer;
 

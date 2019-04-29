@@ -11,25 +11,15 @@ import static com.laifeng.sopcastsdk.entity.Frame.FRAME_TYPE_AUDIO;
 import static com.laifeng.sopcastsdk.entity.Frame.FRAME_TYPE_INTER_FRAME;
 import static com.laifeng.sopcastsdk.entity.Frame.FRAME_TYPE_KEY_FRAME;
 
-/**
- * @Title: NormalSendQueue
- * @Package com.laifeng.sopcastsdk.stream.sender.sendqueue
- * @Description:
- * @Author Jim
- * @Date 2016/11/21
- * @Time 上午10:33
- * @Version
- */
-
 public class NormalSendQueue implements ISendQueue {
     private static final int NORMAL_FRAME_BUFFER_SIZE = 800;
     private ArrayBlockingQueue<Frame> mFrameBuffer;
     private int mFullQueueCount = NORMAL_FRAME_BUFFER_SIZE;
-    private AtomicInteger mTotalFrameCount = new AtomicInteger(0);  //总个数
-    private AtomicInteger mGiveUpFrameCount = new AtomicInteger(0);  //总个数
+    private AtomicInteger mTotalFrameCount = new AtomicInteger(0);
+    private AtomicInteger mGiveUpFrameCount = new AtomicInteger(0);
 
-    private AtomicInteger mInFrameCount = new AtomicInteger(0);  //进入总个数
-    private AtomicInteger mOutFrameCount = new AtomicInteger(0);  //输出总个数
+    private AtomicInteger mInFrameCount = new AtomicInteger(0);
+    private AtomicInteger mOutFrameCount = new AtomicInteger(0);
     private volatile boolean mScanFlag;
     private SendQueueListener mSendQueueListener;
     private ScanThread mScanThread;
@@ -105,7 +95,7 @@ public class NormalSendQueue implements ISendQueue {
 
     private void abandonData() {
         if(mTotalFrameCount.get() >= (mFullQueueCount/ 2)) {
-            //从队列头部开始搜索，删除最早发现的连续P帧
+
             boolean pFrameDelete = false;
             boolean start = false;
             for(Frame frame : mFrameBuffer) {
@@ -124,7 +114,7 @@ public class NormalSendQueue implements ISendQueue {
                 }
             }
             boolean kFrameDelete = false;
-            //从队列头部开始搜索，删除最早发现的I帧
+
             if(!pFrameDelete) {
                 for(Frame frame : mFrameBuffer) {
                     if(frame.frameType == FRAME_TYPE_KEY_FRAME) {
@@ -136,7 +126,7 @@ public class NormalSendQueue implements ISendQueue {
                     }
                 }
             }
-            //从队列头部开始搜索，删除音频
+
             if(!pFrameDelete && !kFrameDelete) {
                 for(Frame frame : mFrameBuffer) {
                     if(frame.frameType == FRAME_TYPE_AUDIO) {
@@ -158,7 +148,7 @@ public class NormalSendQueue implements ISendQueue {
         @Override
         public void run() {
             while (mScanFlag) {
-                //达到仲裁次数了
+
                 if(mCurrentScanTime == SCAN_MAX_TIME) {
                     int averageDif = 0;
                     int negativeCounter = 0;

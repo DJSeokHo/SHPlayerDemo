@@ -11,7 +11,6 @@ import android.view.Surface;
 
 import com.laifeng.sopcastsdk.configuration.VideoConfiguration;
 import com.laifeng.sopcastsdk.constant.SopCastConstant;
-import com.laifeng.sopcastsdk.controller.video.IVideoController;
 import com.laifeng.sopcastsdk.mediacodec.VideoMediaCodec;
 import com.laifeng.sopcastsdk.screen.ScreenRecordEncoder;
 import com.laifeng.sopcastsdk.utils.SopCastLog;
@@ -19,15 +18,6 @@ import com.laifeng.sopcastsdk.video.OnVideoEncodeListener;
 
 import static android.os.Build.VERSION_CODES.LOLLIPOP;
 
-/**
- * @Title: ScreenVideoController
- * @Package com.laifeng.sopcastsdk.controller.video
- * @Description:
- * @Author Jim
- * @Date 2016/11/2
- * @Time 下午2:20
- * @Version
- */
 @TargetApi(LOLLIPOP)
 public class ScreenVideoController implements IVideoController {
     private MediaProjectionManager mManager;
@@ -91,10 +81,10 @@ public class ScreenVideoController implements IVideoController {
 
     @Override
     public boolean setVideoBps(int bps) {
-        //重新设置硬编bps，在低于19的版本需要重启编码器
+
         boolean result = false;
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            //由于重启硬编编码器效果不好，此次不做处理
+
             SopCastLog.d(SopCastConstant.TAG, "Bps need change, but MediaCodec do not support.");
         }else {
             if (mEncoder != null) {

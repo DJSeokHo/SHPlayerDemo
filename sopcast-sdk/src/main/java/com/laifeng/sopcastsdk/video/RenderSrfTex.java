@@ -19,15 +19,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-/**
- * @Title: RenderSrfTex
- * @Package com.laifeng.sopcastsdk.video
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 下午2:17
- * @Version
- */
 @TargetApi(18)
 public class RenderSrfTex {
     private final FloatBuffer mNormalVtxBuf = GlUtil.createVertexBuffer();
@@ -206,7 +197,6 @@ public class RenderSrfTex {
 
             GLES20.glUniform1i(muSamplerHandle, 0);
 
-            //处理前置摄像头镜像
             CameraData cameraData = CameraHolder.instance().getCameraData();
             if(cameraData != null) {
                 int facing = cameraData.cameraFacing;
@@ -223,7 +213,6 @@ public class RenderSrfTex {
 
             GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-            //绘制纹理
             drawWatermark();
 
             mRecorder.swapBuffers();

@@ -3,23 +3,13 @@ package com.laifeng.sopcastsdk.controller.audio;
 import android.annotation.TargetApi;
 import android.media.AudioRecord;
 
+import com.laifeng.sopcastsdk.audio.AudioProcessor;
+import com.laifeng.sopcastsdk.audio.AudioUtils;
 import com.laifeng.sopcastsdk.audio.OnAudioEncodeListener;
 import com.laifeng.sopcastsdk.configuration.AudioConfiguration;
 import com.laifeng.sopcastsdk.constant.SopCastConstant;
-import com.laifeng.sopcastsdk.audio.AudioProcessor;
-import com.laifeng.sopcastsdk.audio.AudioUtils;
-import com.laifeng.sopcastsdk.controller.audio.IAudioController;
 import com.laifeng.sopcastsdk.utils.SopCastLog;
 
-/**
- * @Title: NormalAudioController
- * @Package com.laifeng.sopcastsdk.controller.audio
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 下午12:53
- * @Version
- */
 public class NormalAudioController implements IAudioController {
     private OnAudioEncodeListener mListener;
     private AudioRecord mAudioRecord;

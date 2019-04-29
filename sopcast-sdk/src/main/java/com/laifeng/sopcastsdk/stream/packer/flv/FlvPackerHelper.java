@@ -5,16 +5,6 @@ import com.laifeng.sopcastsdk.stream.amf.AmfString;
 
 import java.nio.ByteBuffer;
 
-/**
- * @Title: FlvPackerHelper
- * @Package com.laifeng.sopcastsdk.stream.packer.flv
- * @Description:
- * @Author Jim
- * @Date 16/9/23
- * @Time 下午6:34
- * @Version
- */
-
 public class FlvPackerHelper {
     public static final int FLV_HEAD_SIZE = 9;
     public static final int VIDEO_HEADER_SIZE = 5;
@@ -25,23 +15,10 @@ public class FlvPackerHelper {
     public static final int VIDEO_SPECIFIC_CONFIG_EXTEND_SIZE = 11;
 
     /**
-     * 生成flv 头信息
-     * @param buffer 需要写入数据的byte buffer
-     * @param hasVideo 是否有视频
-     * @param hasAudio 是否有音频
-     * @return byte数组
+     * create flv header
      */
     public static void writeFlvHeader(ByteBuffer buffer, boolean hasVideo, boolean hasAudio) {
-        /**
-         *  Flv Header在当前版本中总是由9个字节组成。
-         *  第1-3字节为文件标识（Signature），总为“FLV”（0x46 0x4C 0x56），如图中紫色区域。
-         *  第4字节为版本，目前为1（0x01）。
-         *  第5个字节的前5位保留，必须为0。
-         *  第5个字节的第6位表示是否存在音频Tag。
-         *  第5个字节的第7位保留，必须为0。
-         *  第5个字节的第8位表示是否存在视频Tag。
-         *  第6-9个字节为UI32类型的值，表示从File Header开始到File Body开始的字节数，版本1中总为9。
-         */
+
         byte[] signature = new byte[] {'F', 'L', 'V'};  /* always "FLV" */
         byte version = (byte) 0x01;     /* should be 1 */
         byte videoFlag = hasVideo ? (byte) 0x01 : 0x00;
@@ -55,23 +32,8 @@ public class FlvPackerHelper {
         buffer.put(offset);
     }
 
-    /**
-     * 写flv tag头信息
-     * @param buffer 需要写入数据的byte buffer
-     * @param type 类型：音频（0x8），视频（0x9），脚本（0x12）
-     * @param dataSize 数据大小
-     * @param timestamp 时间戳
-     * @return byte数组
-     */
     public static void writeFlvTagHeader(ByteBuffer buffer, int type, int dataSize, int timestamp) {
-        /**
-         * 第1个byte为记录着tag的类型，音频（0x8），视频（0x9），脚本（0x12）；
-         * 第2-4bytes是数据区的长度，UI24类型的值，也就是tag data的长度；注：这个长度等于最后的Tag Size-11
-         * 第5-7个bytes是时间戳，UI24类型的值，单位是毫秒，类型为0x12脚本类型数据，则时间戳为0，时间戳控制着文件播放的速度，可以根据音视频的帧率类设置；
-         * 第8个byte是扩展时间戳，当24位数值不够时，该字节作为最高位将时间戳扩展为32位值；
-         * 第9-11个bytes是streamID，UI24类型的值，但是总为0；
-         * tag header 长度为1+3+3+1+3=11。
-         */
+
         int sizeAndType = (dataSize & 0x00FFFFFF) | ((type & 0x1F) << 24);
         buffer.putInt(sizeAndType);
         int time = ((timestamp << 8) & 0xFFFFFF00) | ((timestamp >> 24) & 0x000000FF);
@@ -81,16 +43,6 @@ public class FlvPackerHelper {
         buffer.put((byte) 0);
     }
 
-    /**
-     * 生成flv medadata 数据
-     * @param width 视频宽度
-     * @param height 视频高度
-     * @param fps 视频帧率
-     * @param audioRate 音频采样率
-     * @param audioSize 音频大小
-     * @param isStereo 音频是否为立体声
-     * @return byte数组
-     */
     public static byte[] writeFlvMetaData(int width, int height, int fps, int audioRate, int audioSize, boolean isStereo) {
         AmfString metaDataHeader = new AmfString("onMetaData", false);
         AmfMap amfMap = new AmfMap();
@@ -114,26 +66,8 @@ public class FlvPackerHelper {
         return amfBuffer.array();
     }
 
-
-    /**
-     * 第一个视频Tag，需要写入AVC视频流的configuretion信息，这个信息根据pps、sps生成
-     * 8 bit configuration version ------ 版本号
-     * 8 bit AVC Profile Indication ------- sps[1]
-     * 8 bit Profile Compatibility ------- sps[2]
-     * 8 bit AVC Level Compatibility ------- sps[3]
-     * 6 bit Reserved ------- 111111
-     * 2 bit Length Size Minus One ------- NAL Unit Length长度为－1，一般为3
-     * 3 bit Reserved ------- 111
-     * 5 bit Num of Sequence Parameter Sets ------- sps个数，一般为1
-     * ? bit Sequence Parameter Set NAL Units ------- （sps_size + sps）的数组
-     * 8 bit Num of Picture Parameter Sets ------- pps个数，一般为1
-     * ? bit Picture Parameter Set NAL Units ------- （pps_size + pps）的数组
-     * @param sps
-     * @param pps
-     * @return
-     */
     public static void writeFirstVideoTag(ByteBuffer buffer, byte[] sps, byte[] pps) {
-        //写入Flv Video Header
+
         writeVideoHeader(buffer, FlvVideoFrameType.KeyFrame, FlvVideoCodecID.AVC, FlvVideoAVCPacketType.SequenceHeader);
 
         buffer.put((byte)0x01);
@@ -151,17 +85,6 @@ public class FlvPackerHelper {
         buffer.put(pps);
     }
 
-    /**
-     * 封装flv 视频头信息
-     * 4 bit Frame Type  ------ 帧类型
-     * 4 bit CodecID ------ 视频类型
-     * 8 bit AVCPacketType ------ 是NALU 还是 sequence header
-     * 24 bit CompositionTime ------ 如果为NALU 则为时间间隔，否则为0
-     * @param flvVideoFrameType 参见 class FlvVideoFrameType
-     * @param codecID 参见 class FlvVideo
-     * @param AVCPacketType 参见 class FlvVideoAVCPacketType
-     * @return
-     */
     public static void writeVideoHeader(ByteBuffer buffer, int flvVideoFrameType, int codecID, int AVCPacketType) {
         byte first = (byte) (((flvVideoFrameType & 0x0F) << 4)| (codecID & 0x0F));
         buffer.put(first);
@@ -172,30 +95,17 @@ public class FlvPackerHelper {
         buffer.put((byte) 0x00);
     }
 
-    /**
-     * 写视频tag
-     * @param data 视频数据
-     * @param isKeyFrame 是否为关键帧
-     * @return byte数组
-     */
     public static void writeH264Packet(ByteBuffer buffer, byte[] data, boolean isKeyFrame) {
-        //生成Flv Video Header
+
         int flvVideoFrameType = FlvVideoFrameType.InterFrame;
         if(isKeyFrame) {
             flvVideoFrameType = FlvVideoFrameType.KeyFrame;
         }
         writeVideoHeader(buffer, flvVideoFrameType, FlvVideoCodecID.AVC, FlvVideoAVCPacketType.NALU);
 
-        //写入视频信息
         buffer.put(data);
     }
 
-    /**
-     * 写第一个音频tag
-     * @param audioRate 音频采样率
-     * @param isStereo 是否为立体声
-     * @return byte数组
-     */
     public static void writeFirstAudioTag(ByteBuffer buffer, int audioRate, boolean isStereo, int audioSize) {
         byte[] audioInfo = new byte[2];
         int soundRateIndex = getAudioSimpleRateIndex(audioRate);
@@ -210,22 +120,10 @@ public class FlvPackerHelper {
 
 
     public static void writeAudioTag(ByteBuffer buffer, byte[] audioInfo, boolean isFirst, int audioSize) {
-        //写入音频头信息
         writeAudioHeader(buffer, isFirst, audioSize);
-
-        //写入音频信息
         buffer.put(audioInfo);
     }
 
-    /**
-     * 写Audio Header信息
-     * soundFormat 声音类型 参见 FlvAudio
-     * soundRate 声音采样频率 参加 FlvAudioSampleRate
-     * soundSize 声音采样大小 参加 FlvAudioSampleSize
-     * soundType 声音的类别 参加 FlvAudioSampleType
-     * AACPacketType 0 ＝ AAC sequence header   1 = AAC raw
-     * @return
-     */
     public static void writeAudioHeader(ByteBuffer buffer, boolean isFirst, int audioSize) {
         int soundFormat = FlvAudio.AAC;
 
@@ -251,12 +149,6 @@ public class FlvPackerHelper {
         buffer.put(header);
     }
 
-
-    /**
-     * 根据传入的采样频率获取规定的采样频率的index
-     * @param audioSampleRate
-     * @return
-     */
     public static int getAudioSimpleRateIndex(int audioSampleRate) {
         int simpleRateIndex;
         switch (audioSampleRate) {

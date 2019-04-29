@@ -8,15 +8,6 @@ import com.laifeng.sopcastsdk.utils.SopCastLog;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-/**
- * @Title: AnnexbHelper
- * @Package com.laifeng.sopcastsdk.video
- * @Description:
- * @Author Jim
- * @Date 16/9/1
- * @Time 下午2:20
- * @Version
- */
 public class AnnexbHelper {
 
     // Coded slice of a non-IDR picture slice_layer_without_partitioning_rbsp( )
@@ -65,11 +56,6 @@ public class AnnexbHelper {
         mUploadPpsSps = true;
     }
 
-    /**
-     * 将硬编得到的视频数据进行处理生成每一帧视频数据，然后传给flv打包器
-     * @param bb 硬编后的数据buffer
-     * @param bi 硬编的BufferInfo
-     */
     public void analyseVideoData(ByteBuffer bb, MediaCodec.BufferInfo bi) {
         bb.position(bi.offset);
         bb.limit(bi.offset + bi.size);
@@ -133,12 +119,6 @@ public class AnnexbHelper {
         }
     }
 
-    /**
-     * 从硬编出来的数据取出一帧nal
-     * @param bb
-     * @param bi
-     * @return
-     */
     private byte[] annexbDemux(ByteBuffer bb, MediaCodec.BufferInfo bi) {
         AnnexbSearch annexbSearch = new AnnexbSearch();
         avcStartWithAnnexb(annexbSearch, bb, bi);
@@ -168,12 +148,6 @@ public class AnnexbHelper {
     }
 
 
-    /**
-     * 从硬编出来的byteBuffer中查找nal
-     * @param as
-     * @param bb
-     * @param bi
-     */
     private void avcStartWithAnnexb(AnnexbSearch as, ByteBuffer bb, MediaCodec.BufferInfo bi) {
         as.match = false;
         as.startCode = 0;

@@ -18,15 +18,6 @@ import com.laifeng.sopcastsdk.camera.focus.FocusPieView;
 import com.laifeng.sopcastsdk.utils.WeakHandler;
 import com.laifeng.sopcastsdk.video.MyRenderer;
 
-/**
- * @Title: CameraView
- * @Package com.laifeng.sopcastsdk.ui
- * @Description:
- * @Author Jim
- * @Date 16/9/18
- * @Time 下午5:31
- * @Version
- */
 public class CameraView extends FrameLayout {
     private Context mContext;
     protected RenderSurfaceView mRenderSurfaceView;

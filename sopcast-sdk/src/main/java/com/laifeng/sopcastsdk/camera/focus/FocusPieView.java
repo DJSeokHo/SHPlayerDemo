@@ -37,7 +37,8 @@ public class FocusPieView extends ImageView {
     public void setFocusImage(boolean success) {
         if (success) {
             setImageResource(R.drawable.camera_focus_ring_success);
-        } else {
+        }
+        else {
             setImageResource(R.drawable.camera_focus_ring_fail);
         }
     }

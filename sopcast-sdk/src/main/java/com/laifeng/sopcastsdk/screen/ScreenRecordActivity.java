@@ -18,16 +18,6 @@ import com.laifeng.sopcastsdk.stream.sender.Sender;
 import com.laifeng.sopcastsdk.utils.SopCastUtils;
 import com.laifeng.sopcastsdk.utils.SopCastLog;
 
-/**
- * @Title: ScreenRecordActivity
- * @Package com.laifeng.sopcastsdk.screen
- * @Description:
- * @Author Jim
- * @Date 2016/11/2
- * @Time 下午2:45
- * @Version
- */
-
 public class ScreenRecordActivity extends Activity {
     private static final String TAG = SopCastConstant.TAG;
     private static final int RECORD_REQUEST_CODE = 101;

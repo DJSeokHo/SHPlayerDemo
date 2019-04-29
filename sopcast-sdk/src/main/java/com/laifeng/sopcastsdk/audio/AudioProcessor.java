@@ -4,20 +4,8 @@ import android.media.AudioRecord;
 
 import com.laifeng.sopcastsdk.configuration.AudioConfiguration;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.ShortBuffer;
 import java.util.Arrays;
 
-/**
- * @Title: AudioProcessor
- * @Package com.laifeng.sopcastsdk.audio
- * @Description:
- * @Author Jim
- * @Date 16/9/19
- * @Time 上午9:56
- * @Version
- */
 public class AudioProcessor extends Thread {
     private volatile boolean mPauseFlag;
     private volatile boolean mStopFlag;

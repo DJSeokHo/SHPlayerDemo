@@ -16,15 +16,6 @@ import static com.laifeng.sopcastsdk.stream.packer.flv.FlvPackerHelper.PRE_SIZE;
 import static com.laifeng.sopcastsdk.stream.packer.flv.FlvPackerHelper.VIDEO_HEADER_SIZE;
 import static com.laifeng.sopcastsdk.stream.packer.flv.FlvPackerHelper.VIDEO_SPECIFIC_CONFIG_EXTEND_SIZE;
 
-/**
- * @Title: FlvPacker
- * @Package com.laifeng.sopcastsdk.stream.packer
- * @Description:
- * @Author Jim
- * @Date 16/9/13
- * @Time 上午11:51
- * @Version
- */
 @TargetApi(18)
 public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
 
@@ -106,7 +97,7 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
             isKeyFrameWrite = true;
             packetType = KEY_FRAME;
         }
-        //确保第一帧是关键帧，避免一开始出现灰色模糊界面
+
         if(!isKeyFrameWrite) {
             return;
         }
@@ -126,13 +117,13 @@ public class FlvPacker implements Packer, AnnexbHelper.AnnexbNaluListener{
         if(packetListener == null) {
             return;
         }
-        //写入Flv header信息
+
         writeFlvHeader();
-        //写入Meta 相关信息
+
         writeMetaData();
-        //写入第一个视频信息
+
         writeFirstVideoTag(sps, pps);
-        //写入第一个音频信息
+
         writeFirstAudioTag();
         mStartTime = System.currentTimeMillis();
         isHeaderWrite = true;

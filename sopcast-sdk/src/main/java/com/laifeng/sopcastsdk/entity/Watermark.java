@@ -2,15 +2,6 @@ package com.laifeng.sopcastsdk.entity;
 
 import android.graphics.Bitmap;
 
-/**
- * @Title: Watermark
- * @Package com.laifeng.sopcastsdk.video
- * @Description:
- * @Author Jim
- * @Date 16/9/18
- * @Time 下午2:32
- * @Version
- */
 public class Watermark {
     public Bitmap markImg;
     public int width;

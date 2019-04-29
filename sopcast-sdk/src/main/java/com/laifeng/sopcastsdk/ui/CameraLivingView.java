@@ -30,15 +30,6 @@ import com.laifeng.sopcastsdk.utils.SopCastLog;
 import com.laifeng.sopcastsdk.utils.WeakHandler;
 import com.laifeng.sopcastsdk.video.effect.Effect;
 
-/**
- * @Title: CameraLivingView
- * @Package com.laifeng.sopcastsdk.ui
- * @Description:
- * @Author Jim
- * @Date 16/9/18
- * @Time 下午5:41
- * @Version
- */
 public class CameraLivingView extends CameraView {
     public static final int NO_ERROR = 0;
     public static final int VIDEO_TYPE_ERROR = 1;

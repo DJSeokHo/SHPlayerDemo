@@ -16,23 +16,14 @@ import com.laifeng.sopcastsdk.camera.exception.CameraNotSupportException;
 import com.laifeng.sopcastsdk.camera.exception.NoCameraException;
 import com.laifeng.sopcastsdk.configuration.VideoConfiguration;
 import com.laifeng.sopcastsdk.entity.Watermark;
-
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.opengles.GL10;
 import com.laifeng.sopcastsdk.mediacodec.VideoMediaCodec;
 import com.laifeng.sopcastsdk.utils.WeakHandler;
 import com.laifeng.sopcastsdk.video.effect.Effect;
 import com.laifeng.sopcastsdk.video.effect.NullEffect;
 
-/**
- * @Title: MyRenderer
- * @Package com.laifeng.sopcastsdk.video
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 下午2:06
- * @Version
- */
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
+
 @TargetApi(18)
 public class MyRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener{
     private int mSurfaceTextureId = -1;

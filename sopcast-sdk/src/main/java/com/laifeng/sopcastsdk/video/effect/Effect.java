@@ -1,31 +1,19 @@
 package com.laifeng.sopcastsdk.video.effect;
 
-import android.content.Context;
 import android.graphics.PointF;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
-import android.opengl.Matrix;
 import android.text.TextUtils;
 
 import com.laifeng.sopcastsdk.camera.CameraData;
 import com.laifeng.sopcastsdk.camera.CameraHolder;
 import com.laifeng.sopcastsdk.constant.SopCastConstant;
 import com.laifeng.sopcastsdk.utils.SopCastLog;
-import com.laifeng.sopcastsdk.video.GLSLFileUtils;
 import com.laifeng.sopcastsdk.video.GlUtil;
 
 import java.nio.FloatBuffer;
 import java.util.LinkedList;
 
-/**
- * @Title: Effect
- * @Package com.laifeng.sopcastsdk.video.effert
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 下午2:10
- * @Version
- */
 public abstract class Effect {
     private final FloatBuffer mVtxBuf = GlUtil.createSquareVtx();
     private final float[]     mPosMtx = GlUtil.createIdentityMtx();

@@ -1,14 +1,5 @@
 package com.laifeng.sopcastsdk.configuration;
 
-/**
- * @Title: VideoConfiguration
- * @Package com.laifeng.sopcastsdk.configuration
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 下午3:20
- * @Version
- */
 public final class VideoConfiguration {
     public static final int DEFAULT_HEIGHT = 640;
     public static final int DEFAULT_WIDTH = 360;

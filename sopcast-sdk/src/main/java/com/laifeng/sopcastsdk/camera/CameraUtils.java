@@ -17,16 +17,6 @@ import com.laifeng.sopcastsdk.utils.SopCastLog;
 import java.util.ArrayList;
 import java.util.List;
 
-
-/**
- * @Title: CameraUtils
- * @Package com.youku.crazytogether.app.modules.sopCastV2
- * @Description:
- * @Author Jim
- * @Date 16/3/23
- * @Time 下午12:01
- * @Version
- */
 @TargetApi(14)
 public class CameraUtils {
 
@@ -70,7 +60,7 @@ public class CameraUtils {
     }
 
     public static void setPreviewFormat(Camera camera, Camera.Parameters parameters) throws CameraNotSupportException{
-        //设置预览回调的图片格式
+
         try {
             parameters.setPreviewFormat(ImageFormat.NV21);
             camera.setParameters(parameters);
@@ -80,7 +70,7 @@ public class CameraUtils {
     }
 
     public static void setPreviewFps(Camera camera, int fps, Camera.Parameters parameters) {
-        //设置摄像头预览帧率
+
         if(BlackListHelper.deviceInFpsBlacklisted()) {
             SopCastLog.d(SopCastConstant.TAG, "Device in fps setting black list, so set the camera fps 15");
             fps = 15;
@@ -127,7 +117,7 @@ public class CameraUtils {
             cameraData.cameraWidth = size.width;
             cameraData.cameraHeight = size.height;
         }
-        //设置预览大小
+
         SopCastLog.d(SopCastConstant.TAG, "Camera Width: " + size.width + "    Height: " + size.height);
         try {
             parameters.setPreviewSize(cameraData.cameraWidth, cameraData.cameraHeight);
@@ -205,13 +195,13 @@ public class CameraUtils {
         double minWidthDiff = Double.MAX_VALUE;
         List<Camera.Size> sizes = camera.getParameters().getSupportedPreviewSizes();
         if (sizes == null) return null;
-        //找到宽度差距最小的
+
         for(Camera.Size size:sizes){
             if (Math.abs(size.width - width) < minWidthDiff) {
                 minWidthDiff = Math.abs(size.width - width);
             }
         }
-        //在宽度差距最小的里面，找到高度差距最小的
+
         for(Camera.Size size:sizes){
             if(Math.abs(size.width - width) == minWidthDiff) {
                 if(Math.abs(size.height - height) < minHeightDiff) {

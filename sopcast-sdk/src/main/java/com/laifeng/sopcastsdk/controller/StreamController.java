@@ -14,15 +14,6 @@ import com.laifeng.sopcastsdk.video.OnVideoEncodeListener;
 
 import java.nio.ByteBuffer;
 
-/**
- * @Title: StreamController
- * @Package com.laifeng.sopcastsdk.controller
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 上午11:44
- * @Version
- */
 public class StreamController implements OnAudioEncodeListener, OnVideoEncodeListener, Packer.OnPacketListener{
     private Packer mPacker;
     private Sender mSender;

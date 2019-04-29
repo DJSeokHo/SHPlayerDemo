@@ -2,23 +2,11 @@ package com.laifeng.sopcastsdk.mediacodec;
 
 import android.annotation.TargetApi;
 import android.media.MediaCodec;
-import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 
 import com.laifeng.sopcastsdk.audio.AudioUtils;
 import com.laifeng.sopcastsdk.configuration.AudioConfiguration;
 
-import java.io.IOException;
-
-/**
- * @Title: AudioMediaCodec
- * @Package com.laifeng.sopcastsdk.hw
- * @Description:
- * @Author Jim
- * @Date 16/6/2
- * @Time 下午6:07
- * @Version
- */
 @TargetApi(18)
 public class AudioMediaCodec {
 

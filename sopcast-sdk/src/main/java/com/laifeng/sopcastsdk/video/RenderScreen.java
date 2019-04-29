@@ -13,15 +13,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-/**
- * @Title: RenderScreen
- * @Package com.laifeng.sopcastsdk.video
- * @Description:
- * @Author Jim
- * @Date 16/9/14
- * @Time 下午2:15
- * @Version
- */
 public class RenderScreen {
     private final FloatBuffer mNormalVtxBuf = GlUtil.createVertexBuffer();
     private final FloatBuffer mNormalTexCoordBuf = GlUtil.createTexCoordBuffer();
@@ -211,7 +202,6 @@ public class RenderScreen {
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-        //绘制纹理
         drawWatermark();
 
         GlUtil.checkGlError("draw_E");
