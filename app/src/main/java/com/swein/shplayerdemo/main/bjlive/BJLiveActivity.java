@@ -14,6 +14,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 
 import com.laifeng.sopcastsdk.camera.CameraHolder;
@@ -22,16 +23,19 @@ import com.laifeng.sopcastsdk.configuration.AudioConfiguration;
 import com.laifeng.sopcastsdk.configuration.CameraConfiguration;
 import com.laifeng.sopcastsdk.configuration.VideoConfiguration;
 import com.laifeng.sopcastsdk.entity.Watermark;
-import com.laifeng.sopcastsdk.entity.WatermarkPosition;
 import com.laifeng.sopcastsdk.stream.packer.rtmp.RtmpPacker;
 import com.laifeng.sopcastsdk.stream.sender.rtmp.RtmpSender;
 import com.laifeng.sopcastsdk.ui.CameraLivingView;
 import com.laifeng.sopcastsdk.video.effect.GrayEffect;
 import com.laifeng.sopcastsdk.video.effect.NullEffect;
 import com.swein.shplayerdemo.R;
+import com.swein.shplayerdemo.framework.util.bitmaps.BitmapUtil;
 import com.swein.shplayerdemo.framework.util.debug.log.ILog;
+import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
 import com.swein.shplayerdemo.framework.util.toast.ToastUtil;
+import com.swein.shplayerdemo.main.bjlive.imagelayer.ImageLayerViewHolder;
 
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,14 +50,17 @@ public class BJLiveActivity extends Activity {
             Manifest.permission.WAKE_LOCK};
     private List<String> permissionList = new ArrayList<>();
 
-    private View viewCover;
-
     private Button buttonMic;
     private Button buttonFlash;
     private Button buttonSwitch;
     private Button buttonFocus;
     private Button buttonColor;
     private Button buttonRecord;
+
+    private Button buttonImage;
+    private Button buttonText;
+
+    private FrameLayout frameLayoutContainer;
 
     private ProgressBar progressBar;
 
@@ -69,6 +76,11 @@ public class BJLiveActivity extends Activity {
     private RtmpSender rtmpSender;
     private VideoConfiguration videoConfiguration;
     private int currentBps;
+
+
+    private float mCurrentScale = 1;
+
+    private SoftReference<Bitmap> bitmapSoftReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +108,9 @@ public class BJLiveActivity extends Activity {
         findViews();
 
         initCameraView();
+
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.water_mark);
+        bitmapSoftReference  = new SoftReference<>(BitmapUtil.getScaleBitmap(bitmap, (int) (bitmap.getWidth() * 0.6), (int) (bitmap.getHeight() * 0.6)));
     }
 
     private void initEffects() {
@@ -103,24 +118,25 @@ public class BJLiveActivity extends Activity {
         nullEffect = new NullEffect(this);
     }
 
+    private void setWaterMark(Bitmap bitmap, int width, int height, float touchX, float touchY, int screenWidth, int screenHeight, float rotation) {
+        Watermark watermark = new Watermark(bitmap, width, height, touchX, touchY, screenWidth, screenHeight, rotation);
+        cameraLivingView.setWatermark(watermark);
+    }
+
+    private float screenXToOriginalX(float x, int screenWidth) {
+        return x - (float)screenWidth * 0.5f;
+    }
+
+    private float screenYToOriginalY(float y, int screenHeight) {
+       return -(y - (float)screenHeight * 0.5f);
+    }
+
     private void findViews() {
+
+        frameLayoutContainer = findViewById(R.id.frameLayoutContainer);
 
         cameraLivingView = findViewById(R.id.cameraLivingView);
 
-        viewCover = findViewById(R.id.viewCover);
-        viewCover.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-
-                if (event.getAction() == MotionEvent.ACTION_UP)
-                {
-                    // 1920 1080 is max
-                    ILog.iLogDebug(TAG, event.getX() + " " + event.getY());
-                }
-
-                return false;
-            }
-        });
 
         buttonMic = findViewById(R.id.buttonMic);
         buttonMic.setOnClickListener(new View.OnClickListener() {
@@ -203,12 +219,77 @@ public class BJLiveActivity extends Activity {
         });
 
         progressBar = findViewById(R.id.progressBar);
+
+        buttonImage = findViewById(R.id.buttonImage);
+        buttonImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                ImageLayerViewHolder imageLayerViewHolder = new ImageLayerViewHolder(BJLiveActivity.this, new ImageLayerViewHolder.ImageLayerViewHolderDelegate() {
+                    @Override
+                    public void onActionUp(View view, int width, int height, float translationX, float translationY, float scale, float rotation) {
+                        ILog.iLogDebug(TAG, view.getWidth() + " " + view.getHeight() + " " +
+                                width + " " + height + " " + translationX + " " + translationY + " " + scale + " " + rotation);
+
+                        setWaterMark(bitmapSoftReference.get(), (int)(width * scale), (int)(height * scale),
+                                screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
+                                view.getWidth(), view.getHeight(), rotation);
+
+                    }
+                });
+
+                frameLayoutContainer.addView(imageLayerViewHolder.getView());
+
+                ThreadUtil.startThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        ThreadUtil.startUIThread(0, new Runnable() {
+                            @Override
+                            public void run() {
+
+                                imageLayerViewHolder.setImageView(bitmapSoftReference.get());
+                            }
+                        });
+
+                    }
+                });
+
+            }
+        });
+
+        buttonText = findViewById(R.id.buttonText);
+        buttonText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
     }
 
-    private void setWaterMark(Bitmap bitmap, int width, int height) {
-        Watermark watermark = new Watermark(bitmap, width, height, WatermarkPosition.WATERMARK_ORIENTATION_BOTTOM_RIGHT, 100, 100);
-        cameraLivingView.setWatermark(watermark);
-    }
+//    private int getDeviceScreenWidth(Context context) {
+//
+//        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//            return 0;
+//        }
+//
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//
+//        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+//        return displayMetrics.widthPixels;
+//    }
+//
+//    private int getDeviceScreenHeight(Context context) {
+//
+//        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//            return 0;
+//        }
+//
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//
+//        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+//        return displayMetrics.heightPixels;
+//    }
 
     /**
      * must check camera null
@@ -236,6 +317,20 @@ public class BJLiveActivity extends Activity {
         setCameraSize(previewSizes.get(0).width, previewSizes.get(0).height);
     }
 
+    private void setRtmpSize(int width, int height) {
+        rtmpSender.setVideoParams(width, height);
+    }
+
+    private void setBestRtmpSize() {
+        Camera.Parameters params = CameraHolder.instance().getmCameraDevice().getParameters();
+        List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
+        for(int i = 0; i < previewSizes.size(); i++) {
+            ILog.iLogDebug(TAG, String.valueOf(previewSizes.get(i).width) + " " + String.valueOf(previewSizes.get(i).height));
+        }
+
+        setRtmpSize(previewSizes.get(0).width, previewSizes.get(0).height);
+    }
+
     private void initCameraView() {
 
         cameraLivingView.init();
@@ -255,9 +350,7 @@ public class BJLiveActivity extends Activity {
                 ToastUtil.showShortToastNormal(BJLiveActivity.this, "camera open success");
 
                 setBestCameraSize();
-
-                Bitmap watermarkImg = BitmapFactory.decodeResource(getResources(), R.drawable.water_mark);
-                setWaterMark(watermarkImg, 200, 150);
+                setBestRtmpSize();
 
             }
 

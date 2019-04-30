@@ -13,7 +13,6 @@ import android.opengl.Matrix;
 import com.laifeng.sopcastsdk.camera.CameraData;
 import com.laifeng.sopcastsdk.camera.CameraHolder;
 import com.laifeng.sopcastsdk.entity.Watermark;
-import com.laifeng.sopcastsdk.entity.WatermarkPosition;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -61,61 +60,90 @@ public class RenderSrfTex {
 
     public void setWatermark(Watermark watermark) {
         if(watermark !=null) {
-            mWatermarkImg = watermark.markImg;
-            initWatermarkVertexBuffer(watermark.width, watermark.height, watermark.orientation, watermark.vMargin, watermark.hMargin);
+            if(mWatermarkImg != null && !mWatermarkImg.isRecycled()) {
+                mWatermarkImg.recycle();
+                mWatermarkImg = null;
+            }
+
+            mWatermarkImg = watermark.bitmap;
+            initWatermarkVertexBuffer(
+                    watermark.bottomLeftX, watermark.bottomLeftY,
+                    watermark.topLeftX, watermark.topLeftY,
+                    watermark.topRightX, watermark.topRightY,
+                    watermark.bottomRightX, watermark.bottomRightY);
         }
         else {
             mWatermarkImg = null;
         }
     }
 
-    private void initWatermarkVertexBuffer(int width, int height, int orientation, int vMargin, int hMargin) {
+    private void initWatermarkVertexBuffer(
+            float leftBottomX, float leftBottomY,
+                                           float leftTopX, float leftTopY,
+                                           float rightTopX, float rightTopY,
+                                           float rightBottomX, float rightBottomY) {
 
-        boolean isTop, isRight;
-        if(orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_LEFT
-                || orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_RIGHT) {
-            isTop = true;
-        } else {
-            isTop = false;
-        }
-
-        if(orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_RIGHT
-                || orientation == WatermarkPosition.WATERMARK_ORIENTATION_BOTTOM_RIGHT) {
-            isRight = true;
-        } else {
-            isRight = false;
-        }
-
-        float leftX = (mVideoWidth/2.0f - hMargin - width)/(mVideoWidth/2.0f);
-        float rightX = (mVideoWidth/2.0f - hMargin)/(mVideoWidth/2.0f);
-
-        float topY = (mVideoHeight/2.0f - vMargin)/(mVideoHeight/2.0f);
-        float bottomY = (mVideoHeight/2.0f - vMargin - height)/(mVideoHeight/2.0f);
-
-        float temp;
-
-        if(!isRight) {
-            temp = leftX;
-            leftX = -rightX;
-            rightX = -temp;
-        }
-        if(!isTop) {
-            temp = topY;
-            topY = -bottomY;
-            bottomY = -temp;
-        }
         final float watermarkCoords[]= {
-                leftX,  bottomY, 0.0f,
-                leftX, topY, 0.0f,
-                rightX,  bottomY, 0.0f,
-                rightX, topY, 0.0f
+                leftBottomX,  leftBottomY, 0.0f,
+                leftTopX, leftTopY, 0.0f,
+                rightBottomX,  rightBottomY, 0.0f,
+                rightTopX, rightTopY, 0.0f
         };
+
         ByteBuffer bb = ByteBuffer.allocateDirect(watermarkCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         mWatermarkVertexBuffer = bb.asFloatBuffer();
         mWatermarkVertexBuffer.put(watermarkCoords);
         mWatermarkVertexBuffer.position(0);
     }
+
+//    private void initWatermarkVertexBuffer(int width, int height, int orientation, int vMargin, int hMargin) {
+//
+//        boolean isTop, isRight;
+//        if(orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_LEFT
+//                || orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_RIGHT) {
+//            isTop = true;
+//        } else {
+//            isTop = false;
+//        }
+//
+//        if(orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_RIGHT
+//                || orientation == WatermarkPosition.WATERMARK_ORIENTATION_BOTTOM_RIGHT) {
+//            isRight = true;
+//        } else {
+//            isRight = false;
+//        }
+//
+//        float leftX = (mVideoWidth/2.0f - hMargin - width)/(mVideoWidth/2.0f);
+//        float rightX = (mVideoWidth/2.0f - hMargin)/(mVideoWidth/2.0f);
+//
+//        float topY = (mVideoHeight/2.0f - vMargin)/(mVideoHeight/2.0f);
+//        float bottomY = (mVideoHeight/2.0f - vMargin - height)/(mVideoHeight/2.0f);
+//
+//        float temp;
+//
+//        if(!isRight) {
+//            temp = leftX;
+//            leftX = -rightX;
+//            rightX = -temp;
+//        }
+//        if(!isTop) {
+//            temp = topY;
+//            topY = -bottomY;
+//            bottomY = -temp;
+//        }
+//        final float watermarkCoords[]= {
+//                leftX,  bottomY, 0.0f,
+//                leftX, topY, 0.0f,
+//                rightX,  bottomY, 0.0f,
+//                rightX, topY, 0.0f
+//        };
+//        ByteBuffer bb = ByteBuffer.allocateDirect(watermarkCoords.length * 4);
+//        bb.order(ByteOrder.nativeOrder());
+//        mWatermarkVertexBuffer = bb.asFloatBuffer();
+//        mWatermarkVertexBuffer.put(watermarkCoords);
+//        mWatermarkVertexBuffer.position(0);
+//    }
 
     public void setVideoSize(int width, int height) {
         mVideoWidth = width;

@@ -209,12 +209,20 @@ public class MyRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFram
     }
 
     public void setWatermark(Watermark watermark) {
+
+        if(mWatermark != null) {
+            if(mWatermark.bitmap != null && !mWatermark.bitmap.isRecycled()) {
+                mWatermark.bitmap.recycle();
+                mWatermark = null;
+            }
+        }
+
         mWatermark = watermark;
         if(mRenderScreen != null) {
-            mRenderScreen.setWatermark(watermark);
+            mRenderScreen.setWatermark(mWatermark);
         }
         if(mRenderSrfTex != null) {
-            mRenderSrfTex.setWatermark(watermark);
+            mRenderSrfTex.setWatermark(mWatermark);
         }
     }
 

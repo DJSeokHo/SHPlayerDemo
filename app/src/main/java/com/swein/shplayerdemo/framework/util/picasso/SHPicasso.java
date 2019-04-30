@@ -1,6 +1,7 @@
 package com.swein.shplayerdemo.framework.util.picasso;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.widget.ImageView;
 
 import com.squareup.picasso.MemoryPolicy;

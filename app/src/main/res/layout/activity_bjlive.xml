@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".main.bjlive.BJLiveActivity"
     android:background="@color/white"
+    android:id="@+id/frameLayoutContainer"
     >
     <com.laifeng.sopcastsdk.ui.CameraLivingView
         android:id="@+id/cameraLivingView"
@@ -14,49 +15,73 @@
 
     <LinearLayout
         android:layout_gravity="bottom"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="vertical">
 
         <Button
             android:id="@+id/buttonMic"
             android:text="MIC"
             android:textSize="6pt"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_weight="1"
-            android:layout_height="wrap_content" />
+            android:layout_height="0dp" />
 
         <Button
             android:id="@+id/buttonFlash"
             android:text="FLASH"
             android:textSize="6pt"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_weight="1"
-            android:layout_height="wrap_content" />
+            android:layout_height="0dp" />
 
         <Button
             android:id="@+id/buttonSwitch"
             android:text="SWITCH"
             android:textSize="6pt"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_weight="1"
-            android:layout_height="wrap_content" />
+            android:layout_height="0dp" />
 
         <Button
             android:id="@+id/buttonFocus"
             android:text="FOCUS"
             android:textSize="6pt"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_weight="1"
-            android:layout_height="wrap_content" />
+            android:layout_height="0dp" />
 
         <Button
             android:id="@+id/buttonColor"
             android:text="COLOR"
             android:textSize="6pt"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_weight="1"
-            android:layout_height="wrap_content" />
+            android:layout_height="0dp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_gravity="bottom|right"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/buttonImage"
+            android:text="Image"
+            android:textSize="6pt"
+            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_height="0dp" />
+
+        <Button
+            android:id="@+id/buttonText"
+            android:text="Text"
+            android:textSize="6pt"
+            android:layout_width="wrap_content"
+            android:layout_weight="1"
+            android:layout_height="0dp" />
 
     </LinearLayout>
 
@@ -66,14 +91,6 @@
         android:layout_gravity="right"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
-
-    <View
-        android:clickable="true"
-        android:id="@+id/viewCover"
-        android:background="@color/transparent"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:focusable="true" />
 
     <ProgressBar
         android:visibility="gone"
