@@ -117,6 +117,7 @@ public class MyRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFram
                 updateSurface = false;
             }
         }
+
         mEffect.draw(mTexMtx);
         if(mRenderScreen != null) {
             mRenderScreen.draw();

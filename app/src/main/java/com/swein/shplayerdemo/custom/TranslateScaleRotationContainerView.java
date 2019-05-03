@@ -96,7 +96,7 @@ public class TranslateScaleRotationContainerView extends RelativeLayout {
                 break;
 
             case MotionEvent.ACTION_UP:
-
+                imageLayerViewDelegate.onActionUp(translationX, translationY, scale, rotation);
                 break;
             case MotionEvent.ACTION_POINTER_UP:
 

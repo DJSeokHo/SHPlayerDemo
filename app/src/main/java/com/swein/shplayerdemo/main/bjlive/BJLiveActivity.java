@@ -2,19 +2,28 @@ package com.swein.shplayerdemo.main.bjlive;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import com.laifeng.sopcastsdk.camera.CameraHolder;
@@ -35,6 +44,10 @@ import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
 import com.swein.shplayerdemo.framework.util.toast.ToastUtil;
 import com.swein.shplayerdemo.main.bjlive.imagelayer.ImageLayerViewHolder;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +60,9 @@ public class BJLiveActivity extends Activity {
 
     private String[] permissions = new String[]{Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.WAKE_LOCK};
+            Manifest.permission.WAKE_LOCK,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE};
+
     private List<String> permissionList = new ArrayList<>();
 
     private Button buttonMic;
@@ -61,6 +76,7 @@ public class BJLiveActivity extends Activity {
     private Button buttonText;
 
     private FrameLayout frameLayoutContainer;
+    private FrameLayout frameLayoutImageContainer;
 
     private ProgressBar progressBar;
 
@@ -76,7 +92,6 @@ public class BJLiveActivity extends Activity {
     private RtmpSender rtmpSender;
     private VideoConfiguration videoConfiguration;
     private int currentBps;
-
 
     private float mCurrentScale = 1;
 
@@ -111,6 +126,8 @@ public class BJLiveActivity extends Activity {
 
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.water_mark);
         bitmapSoftReference  = new SoftReference<>(BitmapUtil.getScaleBitmap(bitmap, (int) (bitmap.getWidth() * 0.6), (int) (bitmap.getHeight() * 0.6)));
+
+        ILog.iLogDebug(TAG, getDeviceScreenWidth(this) + " !!!! " + getDeviceScreenHeight(this));
     }
 
     private void initEffects() {
@@ -134,6 +151,7 @@ public class BJLiveActivity extends Activity {
     private void findViews() {
 
         frameLayoutContainer = findViewById(R.id.frameLayoutContainer);
+        frameLayoutImageContainer = findViewById(R.id.frameLayoutImageContainer);
 
         cameraLivingView = findViewById(R.id.cameraLivingView);
 
@@ -228,13 +246,121 @@ public class BJLiveActivity extends Activity {
                 ImageLayerViewHolder imageLayerViewHolder = new ImageLayerViewHolder(BJLiveActivity.this, new ImageLayerViewHolder.ImageLayerViewHolderDelegate() {
                     @Override
                     public void onActionUp(View view, int width, int height, float translationX, float translationY, float scale, float rotation) {
-                        ILog.iLogDebug(TAG, view.getWidth() + " " + view.getHeight() + " " +
-                                width + " " + height + " " + translationX + " " + translationY + " " + scale + " " + rotation);
+//                        ILog.iLogDebug(TAG, view.getWidth() + " " + view.getHeight() + " " +
+//                                width + " " + height + " " + translationX + " " + translationY + " " + scale + " " + rotation);
 
-                        setWaterMark(bitmapSoftReference.get(), (int)(width * scale), (int)(height * scale),
-                                screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
-                                view.getWidth(), view.getHeight(), rotation);
+                        frameLayoutImageContainer.removeAllViews();
+                        frameLayoutImageContainer.setVisibility(View.GONE);
 
+                        width = (int) (width * scale);
+                        height = (int) (height * scale);
+
+                        int diagonal = (int) Math.sqrt(width * width + height * height);
+
+                        ImageView imageView = new ImageView(BJLiveActivity.this);
+                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(width, height);
+                        imageView.setLayoutParams(layoutParams);
+                        imageView.setBackgroundColor(Color.TRANSPARENT);
+                        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+                        FrameLayout.LayoutParams fl = (FrameLayout.LayoutParams) frameLayoutImageContainer.getLayoutParams();
+                        fl.width = diagonal;
+                        fl.height = diagonal;
+                        frameLayoutImageContainer.setLayoutParams(fl);
+
+                        frameLayoutImageContainer.setX(translationX);
+                        frameLayoutImageContainer.setY(translationY);
+
+                        frameLayoutImageContainer.addView(imageView);
+                        frameLayoutImageContainer.setVisibility(View.VISIBLE);
+
+                        int finalWidth = width;
+                        int finalHeight = height;
+
+                        ThreadUtil.startUIThread(100, new Runnable() {
+                            @Override
+                            public void run() {
+
+                                imageView.setX((frameLayoutImageContainer.getWidth() - finalWidth) * 0.5f);
+                                imageView.setY((frameLayoutImageContainer.getHeight() - finalHeight) * 0.5f);
+
+                                imageView.setImageBitmap(adjustPhotoRotation(bitmapSoftReference.get(), (int) rotation));
+
+                                frameLayoutImageContainer.setDrawingCacheEnabled(true);
+                                frameLayoutImageContainer.buildDrawingCache();  //启用DrawingCache并创建位图
+                                Bitmap tb = Bitmap.createBitmap(frameLayoutImageContainer.getDrawingCache()); //创建一个DrawingCache的拷贝，因为DrawingCache得到的位图在禁用后会被回收
+                                frameLayoutImageContainer.setDrawingCacheEnabled(false);  //禁用DrawingCahce否则会影响性能
+
+                                imageView.setImageBitmap(null);
+                                frameLayoutImageContainer.setVisibility(View.GONE);
+
+                                ThreadUtil.startThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+                                        try {
+
+                                            saveToLocal(tb, "hahaha");
+
+                                            ThreadUtil.startUIThread(0, new Runnable() {
+                                                @Override
+                                                public void run() {
+
+                                                    FileInputStream fis = null;
+                                                    try {
+                                                        fis = new FileInputStream("/sdcard/DCIM/Camera/" + "hahaha" + ".png");
+                                                    }
+                                                    catch (FileNotFoundException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    Bitmap bbbb  = BitmapFactory.decodeStream(fis);
+
+
+//                                                    ILog.iLogDebug(TAG, "???bbbbb " + bbbb.getWidth() + " " + bbbb.getHeight());
+                                                    ThreadUtil.startUIThread(500, new Runnable() {
+                                                        @Override
+                                                        public void run() {
+
+                                                            imageView.setImageBitmap(bbbb);
+                                                            frameLayoutImageContainer.setVisibility(View.VISIBLE);
+
+                                                            setWaterMark(bbbb, bbbb.getWidth(), bbbb.getHeight(),
+                                                                    screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
+                                                                    view.getWidth(), view.getHeight(), 0);
+                                                        }
+                                                    });
+
+
+                                                }
+                                            });
+                                        }
+                                        catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                });
+
+//                                setWaterMark(bitmap, finalWidth, finalHeight,
+//                                        screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
+//                                        view.getWidth(), view.getHeight(), 0);
+//
+//                                frameLayoutImageContainer.setVisibility(View.GONE);
+//                                frameLayoutImageContainer.removeAllViews();
+                            }
+                        });
+
+
+//                        imageView.setX(relativeLayoutImageContainer.getWidth() * 0.5f + imageView.getWidth() * 0.5f);
+//                        imageView.setY(relativeLayoutImageContainer.getHeight() * 0.5f + imageView.getHeight() * 0.5f);
+
+//                        ILog.iLogDebug(TAG, frameLayoutImageContainer.getWidth() + " " + frameLayoutImageContainer.getHeight());
+//                        ILog.iLogDebug(TAG, imageView.getWidth() + " " + imageView.getHeight());
+//                        ILog.iLogDebug(TAG, width + " " + height);
+//                        ILog.iLogDebug(TAG, translationX + " " + translationY);
+//                        ILog.iLogDebug(TAG, scale + " " + rotation);
+//                        setWaterMark(bitmapSoftReference.get(), (int)(width * scale), (int)(height * scale),
+//                                screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
+//                                view.getWidth(), view.getHeight(), rotation);
                     }
                 });
 
@@ -265,31 +391,81 @@ public class BJLiveActivity extends Activity {
 
             }
         });
+
+
     }
 
-//    private int getDeviceScreenWidth(Context context) {
-//
-//        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-//            return 0;
-//        }
-//
-//        DisplayMetrics displayMetrics = new DisplayMetrics();
-//
-//        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
-//        return displayMetrics.widthPixels;
-//    }
-//
-//    private int getDeviceScreenHeight(Context context) {
-//
-//        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-//            return 0;
-//        }
-//
-//        DisplayMetrics displayMetrics = new DisplayMetrics();
-//
-//        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
-//        return displayMetrics.heightPixels;
-//    }
+    private void saveToLocal(Bitmap bitmap, String bitName) throws Exception {
+        File file = new File("/sdcard/DCIM/Camera/" + bitName + ".png");
+        if (file.exists()) {
+            file.delete();
+        }
+        FileOutputStream out;
+        try {
+            out = new FileOutputStream(file);
+            if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
+                out.flush();
+                out.close();
+
+                // Uri uri = Uri.fromFile(file);
+                // sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
+                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri uri = Uri.fromFile(file);
+                intent.setData(uri);
+                this.sendBroadcast(intent);
+
+                if(!bitmap.isRecycled()) {
+                    bitmap.recycle();
+                }
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    Bitmap adjustPhotoRotation(Bitmap bm, final int orientationDegree) {
+
+        Matrix m = new Matrix();
+        m.setRotate(orientationDegree, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
+        try {
+            Bitmap bm1 = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), m, true);
+
+            return bm1;
+
+        }
+        catch (OutOfMemoryError ex) {
+            ex.printStackTrace();
+        }
+
+        return null;
+
+    }
+
+
+    private int getDeviceScreenWidth(Context context) {
+
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return 0;
+        }
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+
+        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+        return displayMetrics.widthPixels;
+    }
+
+    private int getDeviceScreenHeight(Context context) {
+
+        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return 0;
+        }
+
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+
+        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+        return displayMetrics.heightPixels;
+    }
 
     /**
      * must check camera null
@@ -351,6 +527,25 @@ public class BJLiveActivity extends Activity {
 
                 setBestCameraSize();
                 setBestRtmpSize();
+
+                ThreadUtil.startUIThread(1000, new Runnable() {
+                    @Override
+                    public void run() {
+//                        FileInputStream fis = null;
+//                        try {
+//                            fis = new FileInputStream("/sdcard/DCIM/Camera/" + "hahaha" + ".png");
+//                        }
+//                        catch (FileNotFoundException e) {
+//                            e.printStackTrace();
+//                        }
+//                        Bitmap bbbb  = BitmapFactory.decodeStream(fis);
+                        setWaterMark(bitmapSoftReference.get(), 200, 150,
+                                0, 0,
+                                1920, 1080, 30);
+                    }
+                });
+
+
 
             }
 
@@ -437,7 +632,7 @@ public class BJLiveActivity extends Activity {
         @Override
         public void onNetGood() {
             if (currentBps + 50 <= videoConfiguration.maxBps) {
-                ILog.iLogDebug(TAG, "BPS_CHANGE good up 50");
+//                ILog.iLogDebug(TAG, "BPS_CHANGE good up 50");
                 int bps = currentBps + 50;
                 if (cameraLivingView != null) {
                     boolean result = cameraLivingView.setVideoBps(bps);
@@ -447,15 +642,15 @@ public class BJLiveActivity extends Activity {
                 }
             }
             else {
-                ILog.iLogDebug(TAG, "BPS_CHANGE good good good");
+//                ILog.iLogDebug(TAG, "BPS_CHANGE good good good");
             }
-            ILog.iLogDebug(TAG, "Current Bps: " + currentBps);
+//            ILog.iLogDebug(TAG, "Current Bps: " + currentBps);
         }
 
         @Override
         public void onNetBad() {
             if (currentBps - 100 >= videoConfiguration.minBps) {
-                ILog.iLogDebug(TAG, "BPS_CHANGE bad down 100");
+//                ILog.iLogDebug(TAG, "BPS_CHANGE bad down 100");
                 int bps = currentBps - 100;
                 if (cameraLivingView != null) {
                     boolean result = cameraLivingView.setVideoBps(bps);
@@ -463,10 +658,11 @@ public class BJLiveActivity extends Activity {
                         currentBps = bps;
                     }
                 }
-            } else {
-                ILog.iLogDebug(TAG, "BPS_CHANGE bad down 100");
             }
-            ILog.iLogDebug(TAG, "Current Bps: " + currentBps);
+            else {
+//                ILog.iLogDebug(TAG, "BPS_CHANGE bad down 100");
+            }
+//            ILog.iLogDebug(TAG, "Current Bps: " + currentBps);
         }
     };
 
@@ -520,7 +716,8 @@ public class BJLiveActivity extends Activity {
             if (e1.getX() - e2.getX() > 100 && Math.abs(velocityX) > 200) {
                 // Fling left
                 ToastUtil.showShortToastNormal(BJLiveActivity.this, "Fling Left");
-            } else if (e2.getX() - e1.getX() > 100 && Math.abs(velocityX) > 200) {
+            }
+            else if (e2.getX() - e1.getX() > 100 && Math.abs(velocityX) > 200) {
                 // Fling right
                 ToastUtil.showShortToastNormal(BJLiveActivity.this, "Fling Right");
             }

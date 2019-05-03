@@ -2,10 +2,12 @@ package com.laifeng.sopcastsdk.video;
 
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
-import android.opengl.GLUtils;
+import android.opengl.Matrix;
+import android.util.Log;
 
 import com.laifeng.sopcastsdk.camera.CameraData;
 import com.laifeng.sopcastsdk.camera.CameraHolder;
+import com.laifeng.sopcastsdk.entity.GPUWatermark;
 import com.laifeng.sopcastsdk.entity.Watermark;
 
 import java.nio.ByteBuffer;
@@ -13,8 +15,11 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 public class RenderScreen {
+
+    private final static String TAG = "RenderScreen";
+
     private final FloatBuffer mNormalVtxBuf = GlUtil.createVertexBuffer();
-    private final FloatBuffer mNormalTexCoordBuf = GlUtil.createTexCoordBuffer();
+    //    private final FloatBuffer mNormalTexCoordBuf = GlUtil.createTexCoordBuffer();
     private final float[] mPosMtx = GlUtil.createIdentityMtx();
 
     private int mFboTexId;
@@ -28,15 +33,30 @@ public class RenderScreen {
     private int mScreenW = -1;
     private int mScreenH = -1;
 
+    /* camera buffer */
     private FloatBuffer mCameraTexCoordBuffer;
-
     private Bitmap mWatermarkImg;
+    private float watermakrRotation;
+
+    /* water mark buffer */
     private FloatBuffer mWatermarkVertexBuffer;
-    private int mWatermarkTextureId = -1;
+    private FloatBuffer textVertexBuffer;
+//    private int mWatermarkTextureId = -1;
+
+    private GPUWatermark gpuWatermark;
+    private GPUWatermark textWatermark;
+
+    //    private Square square;
+    private final float[] projectionMatrix = new float[16];
+
 
     public RenderScreen(int id) {
         mFboTexId = id;
         initGL();
+
+        gpuWatermark = new GPUWatermark();
+        textWatermark = new GPUWatermark();
+//        square = new Square();
     }
 
     public void setSreenSize(int width, int height) {
@@ -44,6 +64,15 @@ public class RenderScreen {
         mScreenH = height;
 
         initCameraTexCoordBuffer();
+
+        GLES20.glClearColor(0f, 0f, 0f, 1f);
+        GLES20.glViewport(0, 0, width, height);
+
+        float ratio = (float) width / height;
+
+        Log.d(TAG, String.valueOf(ratio));
+
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
     }
 
     public void setTextureId(int textureId) {
@@ -60,7 +89,7 @@ public class RenderScreen {
         CameraData cameraData = CameraHolder.instance().getCameraData();
         int width = cameraData.cameraWidth;
         int height = cameraData.cameraHeight;
-        if(CameraHolder.instance().isLandscape()) {
+        if (CameraHolder.instance().isLandscape()) {
             cameraWidth = Math.max(width, height);
             cameraHeight = Math.min(width, height);
         } else {
@@ -68,32 +97,18 @@ public class RenderScreen {
             cameraHeight = Math.max(width, height);
         }
 
-        float hRatio = mScreenW / ((float)cameraWidth);
-        float vRatio = mScreenH / ((float)cameraHeight);
+        float hRatio = mScreenW / ((float) cameraWidth);
+        float vRatio = mScreenH / ((float) cameraHeight);
 
         float ratio;
-        if(hRatio > vRatio) {
+        if (hRatio > vRatio) {
             ratio = mScreenH / (cameraHeight * hRatio);
             final float vtx[] = {
                     //UV
-                    0f, 0.5f + ratio/2,
-                    0f, 0.5f - ratio/2,
-                    1f, 0.5f + ratio/2,
-                    1f, 0.5f - ratio/2,
-            };
-            ByteBuffer bb = ByteBuffer.allocateDirect(4 * vtx.length);
-            bb.order(ByteOrder.nativeOrder());
-            mCameraTexCoordBuffer = bb.asFloatBuffer();
-            mCameraTexCoordBuffer.put(vtx);
-            mCameraTexCoordBuffer.position(0);
-        } else {
-            ratio = mScreenW/ (cameraWidth * vRatio);
-            final float vtx[] = {
-                    //UV
-                    0.5f - ratio/2, 1f,
-                    0.5f - ratio/2, 0f,
-                    0.5f + ratio/2, 1f,
-                    0.5f + ratio/2, 0f,
+                    0f, 0.5f + ratio / 2,
+                    0f, 0.5f - ratio / 2,
+                    1f, 0.5f + ratio / 2,
+                    1f, 0.5f - ratio / 2,
             };
             ByteBuffer bb = ByteBuffer.allocateDirect(4 * vtx.length);
             bb.order(ByteOrder.nativeOrder());
@@ -101,23 +116,40 @@ public class RenderScreen {
             mCameraTexCoordBuffer.put(vtx);
             mCameraTexCoordBuffer.position(0);
         }
-
+        else {
+            ratio = mScreenW / (cameraWidth * vRatio);
+            final float vtx[] = {
+                    //UV
+                    0.5f - ratio / 2, 1f,
+                    0.5f - ratio / 2, 0f,
+                    0.5f + ratio / 2, 1f,
+                    0.5f + ratio / 2, 0f,
+            };
+            ByteBuffer bb = ByteBuffer.allocateDirect(4 * vtx.length);
+            bb.order(ByteOrder.nativeOrder());
+            mCameraTexCoordBuffer = bb.asFloatBuffer();
+            mCameraTexCoordBuffer.put(vtx);
+            mCameraTexCoordBuffer.position(0);
+        }
     }
 
     public void setWatermark(Watermark watermark) {
-        if(watermark != null) {
+        if (watermark != null) {
 
-            if(mWatermarkImg != null && !mWatermarkImg.isRecycled()) {
+            if (mWatermarkImg != null && !mWatermarkImg.isRecycled()) {
                 mWatermarkImg.recycle();
                 mWatermarkImg = null;
             }
 
             mWatermarkImg = watermark.bitmap;
+            watermakrRotation = watermark.rotation;
+
             initWatermarkVertexBuffer(
                     watermark.bottomLeftX, watermark.bottomLeftY,
                     watermark.topLeftX, watermark.topLeftY,
                     watermark.topRightX, watermark.topRightY,
                     watermark.bottomRightX, watermark.bottomRightY);
+
         }
         else {
             mWatermarkImg = null;
@@ -129,90 +161,81 @@ public class RenderScreen {
             float leftTopX, float leftTopY,
             float rightTopX, float rightTopY,
             float rightBottomX, float rightBottomY) {
+
         if (mScreenW <= 0 || mScreenH <= 0) {
             return;
         }
 
-//        int width = (int) (mWatermark.width*mWatermarkRatio);
-//        int height = (int) (mWatermark.height*mWatermarkRatio);
-//        int vMargin = (int) (mWatermark.vMargin*mWatermarkRatio);
-//        int hMargin = (int) (mWatermark.hMargin*mWatermarkRatio);
-//
-//        Log.d("???", width + " " + height + " " + vMargin + " " + hMargin);
-//
-//        boolean isTop, isRight;
-//        if(mWatermark.orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_LEFT
-//                || mWatermark.orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_RIGHT) {
-//            isTop = true;
-//        } else {
-//            isTop = false;
-//        }
-//
-//        if(mWatermark.orientation == WatermarkPosition.WATERMARK_ORIENTATION_TOP_RIGHT
-//                || mWatermark.orientation == WatermarkPosition.WATERMARK_ORIENTATION_BOTTOM_RIGHT) {
-//            isRight = true;
-//        } else {
-//            isRight = false;
-//        }
-//
-//        float leftX = (mScreenW/2.0f - hMargin - width)/(mScreenW/2.0f);
-//        float rightX = (mScreenW/2.0f - hMargin)/(mScreenW/2.0f);
-//
-//        float topY = (mScreenH/2.0f - vMargin)/(mScreenH/2.0f);
-//        float bottomY = (mScreenH/2.0f - vMargin - height)/(mScreenH/2.0f);
-//
-//        float temp;
-//
-//        Log.d("???", leftX + " " + rightX + " " + topY + " " + bottomY);
-//
-//        if(!isRight) {
-//            temp = leftX;
-//            leftX = -rightX;
-//            rightX = -temp;
-//        }
-//        if(!isTop) {
-//            temp = topY;
-//            topY = -bottomY;
-//            bottomY = -temp;
-//        }
+        Log.d(TAG, String.valueOf(CameraHolder.instance().isLandscape()));
+        Log.d(TAG, rightBottomX + " " + rightBottomY);
+        Log.d(TAG, rightTopX + " " + rightTopY);
+        Log.d(TAG, leftBottomX + " " + leftBottomY);
+        Log.d(TAG, leftTopX + " " + leftTopY);
 
-//        Log.d("???", leftX + " " + rightX + " " + topY + " " + bottomY);
 
-//        Log.d("???", "left bottom : " + leftX + ":" + bottomY);
-//        Log.d("???", "left top : " + leftX + ":" + topY);
-//        Log.d("???", "right bottom : " + rightX + ":" + bottomY);
-//        Log.d("???", "right top : " + rightX + ":" + topY);
+        float watermarkCoords[];
 
-//        Log.d("???", "left bottom : " + mWatermark.bottomLeftX + " " + mWatermark.bottomLeftY);
-//        Log.d("???", "left top : " + mWatermark.topLeftX + " " + mWatermark.topLeftY);
-//        Log.d("???", "right bottom : " + mWatermark.bottomRightX + " " + mWatermark.bottomRightY);
-//        Log.d("???", "right top : " + mWatermark.topRightX + " " + mWatermark.topRightY);
-
-        final float watermarkCoords[]= {
-                leftBottomX,  leftBottomY, 0.0f,
-                leftTopX, leftTopY, 0.0f,
-                rightBottomX,  rightBottomY, 0.0f,
-                rightTopX, rightTopY, 0.0f
-        };
-
-//        final float watermarkCoords[] = {
-//                -0.5f,  -0.5f, 0.0f,    // left bottom
-//                -0.5f, 0.5f, 0.0f,      // left top
-//                0.5f,  -0.5f, 0.0f,     // right bottom
-//                0.5f, 0.5f, 0.0f        // right top
-//        };
+        if (CameraHolder.instance().isLandscape()) {
+            watermarkCoords = new float[]{
+                    -rightBottomY, -rightBottomX, 0.0f,
+                    rightTopY, rightTopX, 0.0f,
+                    leftBottomY, leftBottomX, 0.0f,
+                    -leftTopY, -leftTopX, 0.0f,
+            };
+        } else {
+            watermarkCoords = new float[]{
+                    rightBottomX, rightBottomY, 0.0f,
+                    rightTopX, rightTopY, 0.0f,
+                    leftBottomX, leftBottomY, 0.0f,
+                    leftTopX, leftTopY, 0.0f,
+            };
+        }
 
         ByteBuffer bb = ByteBuffer.allocateDirect(watermarkCoords.length * 4);
         bb.order(ByteOrder.nativeOrder());
         mWatermarkVertexBuffer = bb.asFloatBuffer();
         mWatermarkVertexBuffer.put(watermarkCoords);
         mWatermarkVertexBuffer.position(0);
+
+//        square.setBitmap();
+        gpuWatermark.setWatermarkCoords(watermarkCoords);
+        gpuWatermark.setBitmap(mWatermarkImg);
+
+
+        float textCoords[];
+
+        if (CameraHolder.instance().isLandscape()) {
+            textCoords = new float[]{
+                    -rightBottomY, -rightBottomX - 0.5f, 0.0f,
+                    rightTopY, rightTopX - 0.5f, 0.0f,
+                    leftBottomY, leftBottomX - 0.5f, 0.0f,
+                    -leftTopY, -leftTopX - 0.5f, 0.0f,
+            };
+        } else {
+            textCoords = new float[]{
+                    rightBottomX, rightBottomY, 0.0f,
+                    rightTopX, rightTopY, 0.0f,
+                    leftBottomX, leftBottomY, 0.0f,
+                    leftTopX, leftTopY, 0.0f,
+            };
+        }
+
+        ByteBuffer tb = ByteBuffer.allocateDirect(textCoords.length * 4);
+        tb.order(ByteOrder.nativeOrder());
+        textVertexBuffer = tb.asFloatBuffer();
+        textVertexBuffer.put(textCoords);
+        textVertexBuffer.position(0);
+
+//        square.setBitmap();
+        textWatermark.setWatermarkCoords(textCoords);
+        textWatermark.setBitmap(mWatermarkImg);
     }
 
     public void draw() {
         if (mScreenW <= 0 || mScreenH <= 0) {
             return;
         }
+
         GlUtil.checkGlError("draw_S");
 
         GLES20.glViewport(0, 0, mScreenW, mScreenH);
@@ -240,48 +263,112 @@ public class RenderScreen {
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-        drawWatermark();
+//        drawWatermark();
+
+        float[] mMVPMatrix = getMVPMatrix(watermakrRotation);
+        gpuWatermark.setMVPMatrix(mMVPMatrix);
+        gpuWatermark.draw();
+
+
+        float[] textMVPMatrix = getTestMVPMatrix(-watermakrRotation);
+        textWatermark.setMVPMatrix(textMVPMatrix);
+        textWatermark.draw();
+
+//        square.setmMVPMatrix(mMVPMatrix);
+//        square.draw();
 
         GlUtil.checkGlError("draw_E");
     }
 
-    private void drawWatermark() {
-        if(mWatermarkImg == null) {
-            return;
-        }
-        mWatermarkVertexBuffer.position(0);
-        GLES20.glVertexAttribPointer(maPositionHandle,
-                3, GLES20.GL_FLOAT, false, 4 * 3, mWatermarkVertexBuffer);
-        GLES20.glEnableVertexAttribArray(maPositionHandle);
+    private float[] getMVPMatrix(float angle) {
+        float[] mMVPMatrix = new float[16];
+        float[] mRotationMatrix = new float[16];
+        float[] mViewMatrix = getDefaultViewMatrix();
 
-        mNormalTexCoordBuf.position(0);
-        GLES20.glVertexAttribPointer(maTexCoordHandle,
-                2, GLES20.GL_FLOAT, false, 4 * 2, mNormalTexCoordBuf);
-        GLES20.glEnableVertexAttribArray(maTexCoordHandle);
 
-        if(mWatermarkTextureId == -1) {
-            int[] textures = new int[1];
-            GLES20.glGenTextures(1, textures, 0);
-            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
-            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mWatermarkImg, 0);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
-                    GLES20.GL_LINEAR);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
-                    GLES20.GL_LINEAR);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
-                    GLES20.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
-                    GLES20.GL_CLAMP_TO_EDGE);
-            mWatermarkTextureId = textures[0];
-        }
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mWatermarkTextureId);
+        Matrix.setRotateM(mRotationMatrix, 0, angle, 0, 0, -1.0f);
 
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-        GLES20.glEnable(GLES20.GL_BLEND);
+        Matrix.multiplyMM(mViewMatrix, 0, mRotationMatrix, 0, mViewMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, mViewMatrix, 0);
 
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-        GLES20.glDisable(GLES20.GL_BLEND);
+
+        return mMVPMatrix;
     }
+
+    private float[] getTestMVPMatrix(float angle) {
+        float[] mMVPMatrix = new float[16];
+        float[] mRotationMatrix = new float[16];
+        float[] mViewMatrix = getDefaultViewMatrix();
+
+        Matrix.setRotateM(mRotationMatrix, 0, angle, 0, 0, -1.0f);
+
+        Matrix.multiplyMM(mViewMatrix, 0, mRotationMatrix, 0, mViewMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, projectionMatrix, 0, mViewMatrix, 0);
+
+
+        return mMVPMatrix;
+    }
+
+    private float[] getDefaultViewMatrix() {
+        float eyeX = 0f;
+        float eyeY = 0f;
+        float eyeZ = -3f;
+        float centerX = 0f;
+        float centerY = 0f;
+        float centerZ = 0f;
+        float upX = 0f;
+        float upY = 1f;
+        float upZ = 0f;
+
+        float[] mViewMatrix = new float[16];
+        Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
+        return mViewMatrix;
+    }
+
+//    private void drawWatermark() {
+//        if(mWatermarkImg == null) {
+//            return;
+//        }
+//        mWatermarkVertexBuffer.position(0);
+//
+//        GLES20.glVertexAttribPointer(maPositionHandle,
+//                3, GLES20.GL_FLOAT, false, 4 * 3, mWatermarkVertexBuffer);
+//        GLES20.glEnableVertexAttribArray(maPositionHandle);
+//
+//        mNormalTexCoordBuf.position(0);
+//        GLES20.glVertexAttribPointer(maTexCoordHandle,
+//                2, GLES20.GL_FLOAT, false, 4 * 2, mNormalTexCoordBuf);
+//        GLES20.glEnableVertexAttribArray(maTexCoordHandle);
+//
+////
+//
+//        if(mWatermarkTextureId == -1) {
+//            int[] textures = new int[1];
+//            GLES20.glGenTextures(1, textures, 0);
+//            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+//            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mWatermarkImg, 0);
+//
+//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
+//                    GLES20.GL_LINEAR);
+//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
+//                    GLES20.GL_LINEAR);
+//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
+//                    GLES20.GL_CLAMP_TO_EDGE);
+//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
+//                    GLES20.GL_CLAMP_TO_EDGE);
+//
+//            mWatermarkTextureId = textures[0];
+//        }
+//
+//
+//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mWatermarkTextureId);
+//
+//        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+//        GLES20.glEnable(GLES20.GL_BLEND);
+//
+//        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+//        GLES20.glDisable(GLES20.GL_BLEND);
+//    }
 
     private void initGL() {
         GlUtil.checkGlError("initGL_S");
@@ -304,6 +391,7 @@ public class RenderScreen {
                         "void main() {\n" +
                         "  gl_FragColor = texture2D(uSampler, textureCoordinate);\n" +
                         "}\n";
+
         mProgram = GlUtil.createProgram(vertexShader, fragmentShader);
         maPositionHandle = GLES20.glGetAttribLocation(mProgram, "position");
         maTexCoordHandle = GLES20.glGetAttribLocation(mProgram, "inputTextureCoordinate");
@@ -312,4 +400,5 @@ public class RenderScreen {
 
         GlUtil.checkGlError("initGL_E");
     }
+
 }
