@@ -23,6 +23,7 @@ import com.swein.shplayerdemo.main.bjlive.BJLiveActivity;
 import com.swein.shplayerdemo.main.floatingview.live.FloatingViewHolder;
 import com.swein.shplayerdemo.main.headautoplayer.live.HeaderAutoPlayerActivity;
 import com.swein.shplayerdemo.main.headautoplayer.vod.VODAutoPlayerActivity;
+import com.swein.shplayerdemo.main.vodupload.VodUploadActivity;
 import com.swein.shplayerdemo.main.watchdetail.WatchingDetailActivity;
 
 import java.util.HashMap;
@@ -39,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Button buttonWatchDetail;
     private Button buttonListAuto;
     private Button buttonBJLive;
+    private Button buttonVODUpload;
 
     private WindowManager.LayoutParams layoutParams;
     private WindowManager windowManager;
@@ -120,8 +122,17 @@ public class MainActivity extends AppCompatActivity {
                 ActivityUtil.startNewActivityWithFinish(MainActivity.this, BJLiveActivity.class);
             }
         });
+
+        buttonVODUpload = findViewById(R.id.buttonVODUpload);
+        buttonVODUpload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ActivityUtil.startNewActivityWithFinish(MainActivity.this, VodUploadActivity.class);
+            }
+        });
+
 //        ActivityUtil.startNewActivityWithFinish(this, VodUploadActivity.class);
-        ActivityUtil.startNewActivityWithFinish(this, BJLiveActivity.class);
+//        ActivityUtil.startNewActivityWithFinish(this, BJLiveActivity.class);
 
     }
 
