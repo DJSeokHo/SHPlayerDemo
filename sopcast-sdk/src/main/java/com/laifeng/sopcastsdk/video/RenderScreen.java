@@ -19,7 +19,6 @@ public class RenderScreen {
     private final static String TAG = "RenderScreen";
 
     private final FloatBuffer mNormalVtxBuf = GlUtil.createVertexBuffer();
-    //    private final FloatBuffer mNormalTexCoordBuf = GlUtil.createTexCoordBuffer();
     private final float[] mPosMtx = GlUtil.createIdentityMtx();
 
     private int mFboTexId;
@@ -36,19 +35,15 @@ public class RenderScreen {
     /* camera buffer */
     private FloatBuffer mCameraTexCoordBuffer;
     private Bitmap mWatermarkImg;
-    private float watermakrRotation;
+    private float watermarkRotation;
 
-    /* water mark buffer */
-    private FloatBuffer mWatermarkVertexBuffer;
-    private FloatBuffer textVertexBuffer;
-//    private int mWatermarkTextureId = -1;
+    private float watermarkCoords[];
+    private float textCoords[];
 
     private GPUWatermark gpuWatermark;
     private GPUWatermark textWatermark;
 
-    //    private Square square;
     private final float[] projectionMatrix = new float[16];
-
 
     public RenderScreen(int id) {
         mFboTexId = id;
@@ -56,7 +51,6 @@ public class RenderScreen {
 
         gpuWatermark = new GPUWatermark();
         textWatermark = new GPUWatermark();
-//        square = new Square();
     }
 
     public void setSreenSize(int width, int height) {
@@ -89,10 +83,12 @@ public class RenderScreen {
         CameraData cameraData = CameraHolder.instance().getCameraData();
         int width = cameraData.cameraWidth;
         int height = cameraData.cameraHeight;
+
         if (CameraHolder.instance().isLandscape()) {
             cameraWidth = Math.max(width, height);
             cameraHeight = Math.min(width, height);
-        } else {
+        }
+        else {
             cameraWidth = Math.min(width, height);
             cameraHeight = Math.max(width, height);
         }
@@ -142,7 +138,7 @@ public class RenderScreen {
             }
 
             mWatermarkImg = watermark.bitmap;
-            watermakrRotation = watermark.rotation;
+            watermarkRotation = watermark.rotation;
 
             initWatermarkVertexBuffer(
                     watermark.bottomLeftX, watermark.bottomLeftY,
@@ -166,14 +162,12 @@ public class RenderScreen {
             return;
         }
 
-        Log.d(TAG, String.valueOf(CameraHolder.instance().isLandscape()));
-        Log.d(TAG, rightBottomX + " " + rightBottomY);
-        Log.d(TAG, rightTopX + " " + rightTopY);
-        Log.d(TAG, leftBottomX + " " + leftBottomY);
-        Log.d(TAG, leftTopX + " " + leftTopY);
+//        Log.d(TAG, String.valueOf(CameraHolder.instance().isLandscape()));
+//        Log.d(TAG, rightBottomX + " " + rightBottomY);
+//        Log.d(TAG, rightTopX + " " + rightTopY);
+//        Log.d(TAG, leftBottomX + " " + leftBottomY);
+//        Log.d(TAG, leftTopX + " " + leftTopY);
 
-
-        float watermarkCoords[];
 
         if (CameraHolder.instance().isLandscape()) {
             watermarkCoords = new float[]{
@@ -191,18 +185,8 @@ public class RenderScreen {
             };
         }
 
-        ByteBuffer bb = ByteBuffer.allocateDirect(watermarkCoords.length * 4);
-        bb.order(ByteOrder.nativeOrder());
-        mWatermarkVertexBuffer = bb.asFloatBuffer();
-        mWatermarkVertexBuffer.put(watermarkCoords);
-        mWatermarkVertexBuffer.position(0);
-
-//        square.setBitmap();
         gpuWatermark.setWatermarkCoords(watermarkCoords);
         gpuWatermark.setBitmap(mWatermarkImg);
-
-
-        float textCoords[];
 
         if (CameraHolder.instance().isLandscape()) {
             textCoords = new float[]{
@@ -220,18 +204,12 @@ public class RenderScreen {
             };
         }
 
-        ByteBuffer tb = ByteBuffer.allocateDirect(textCoords.length * 4);
-        tb.order(ByteOrder.nativeOrder());
-        textVertexBuffer = tb.asFloatBuffer();
-        textVertexBuffer.put(textCoords);
-        textVertexBuffer.position(0);
-
-//        square.setBitmap();
         textWatermark.setWatermarkCoords(textCoords);
         textWatermark.setBitmap(mWatermarkImg);
     }
 
     public void draw() {
+
         if (mScreenW <= 0 || mScreenH <= 0) {
             return;
         }
@@ -263,19 +241,14 @@ public class RenderScreen {
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-//        drawWatermark();
 
-        float[] mMVPMatrix = getMVPMatrix(watermakrRotation);
+        float[] mMVPMatrix = getMVPMatrix(watermarkRotation);
         gpuWatermark.setMVPMatrix(mMVPMatrix);
         gpuWatermark.draw();
 
-
-        float[] textMVPMatrix = getTestMVPMatrix(-watermakrRotation);
+        float[] textMVPMatrix = getTestMVPMatrix(-watermarkRotation);
         textWatermark.setMVPMatrix(textMVPMatrix);
         textWatermark.draw();
-
-//        square.setmMVPMatrix(mMVPMatrix);
-//        square.draw();
 
         GlUtil.checkGlError("draw_E");
     }
@@ -325,72 +298,26 @@ public class RenderScreen {
         return mViewMatrix;
     }
 
-//    private void drawWatermark() {
-//        if(mWatermarkImg == null) {
-//            return;
-//        }
-//        mWatermarkVertexBuffer.position(0);
-//
-//        GLES20.glVertexAttribPointer(maPositionHandle,
-//                3, GLES20.GL_FLOAT, false, 4 * 3, mWatermarkVertexBuffer);
-//        GLES20.glEnableVertexAttribArray(maPositionHandle);
-//
-//        mNormalTexCoordBuf.position(0);
-//        GLES20.glVertexAttribPointer(maTexCoordHandle,
-//                2, GLES20.GL_FLOAT, false, 4 * 2, mNormalTexCoordBuf);
-//        GLES20.glEnableVertexAttribArray(maTexCoordHandle);
-//
-////
-//
-//        if(mWatermarkTextureId == -1) {
-//            int[] textures = new int[1];
-//            GLES20.glGenTextures(1, textures, 0);
-//            GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
-//            GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, mWatermarkImg, 0);
-//
-//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER,
-//                    GLES20.GL_LINEAR);
-//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER,
-//                    GLES20.GL_LINEAR);
-//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S,
-//                    GLES20.GL_CLAMP_TO_EDGE);
-//            GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T,
-//                    GLES20.GL_CLAMP_TO_EDGE);
-//
-//            mWatermarkTextureId = textures[0];
-//        }
-//
-//
-//        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, mWatermarkTextureId);
-//
-//        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-//        GLES20.glEnable(GLES20.GL_BLEND);
-//
-//        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
-//        GLES20.glDisable(GLES20.GL_BLEND);
-//    }
-
     private void initGL() {
         GlUtil.checkGlError("initGL_S");
 
         final String vertexShader =
-                //
                 "attribute vec4 position;\n" +
-                        "attribute vec4 inputTextureCoordinate;\n" +
-                        "uniform   mat4 uPosMtx;\n" +
-                        "varying   vec2 textureCoordinate;\n" +
-                        "void main() {\n" +
-                        "  gl_Position = uPosMtx * position;\n" +
-                        "  textureCoordinate   = inputTextureCoordinate.xy;\n" +
-                        "}\n";
+                "attribute vec4 inputTextureCoordinate;\n" +
+                "uniform   mat4 uPosMtx;\n" +
+                "varying   vec2 textureCoordinate;\n" +
+                "void main() {\n" +
+                "  gl_Position = uPosMtx * position;\n" +
+                "  textureCoordinate   = inputTextureCoordinate.xy;\n" +
+                "}\n";
+
         final String fragmentShader =
-                //
                 "precision mediump float;\n" +
-                        "uniform sampler2D uSampler;\n" +
-                        "varying vec2  textureCoordinate;\n" +
-                        "void main() {\n" +
-                        "  gl_FragColor = texture2D(uSampler, textureCoordinate);\n" +
-                        "}\n";
+                "uniform sampler2D uSampler;\n" +
+                "varying vec2 textureCoordinate;\n" +
+                "void main() {\n" +
+                "  gl_FragColor = texture2D(uSampler, textureCoordinate);\n" +
+                "}\n";
 
         mProgram = GlUtil.createProgram(vertexShader, fragmentShader);
         maPositionHandle = GLES20.glGetAttribLocation(mProgram, "position");
@@ -400,5 +327,6 @@ public class RenderScreen {
 
         GlUtil.checkGlError("initGL_E");
     }
+
 
 }

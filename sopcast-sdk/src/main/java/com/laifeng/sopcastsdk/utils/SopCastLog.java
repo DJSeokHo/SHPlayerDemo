@@ -3,7 +3,7 @@ package com.laifeng.sopcastsdk.utils;
 import android.util.Log;
 
 public class SopCastLog {
-    private static boolean open = false;
+    private static boolean open = true;
 
     public static void isOpen(boolean isOpen) {
         open = isOpen;

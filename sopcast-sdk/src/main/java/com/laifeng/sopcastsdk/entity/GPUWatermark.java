@@ -3,6 +3,7 @@ package com.laifeng.sopcastsdk.entity;
 import android.graphics.Bitmap;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -21,21 +22,21 @@ public class GPUWatermark {
 
     private static final String SHADER_CODE_BITMAP_VERTEX_MVP =
             "uniform mat4 " + FIELD_MATRIX_MVP + ";" +
-                    "attribute vec4 " + FIELD_POSITION + ";" +
-                    "attribute vec2 " + FIELD_A_TEX_COORD + ";" +
-                    "varying vec2 " + FIELD_V_TEX_COORD + ";" +
-                    "void main() {" +
-                    "  gl_Position = " + FIELD_MATRIX_MVP + " * " + FIELD_POSITION + ";" +
-                    "  " + FIELD_V_TEX_COORD + " = " + FIELD_A_TEX_COORD + ";" +
-                    "}";
+            "attribute vec4 " + FIELD_POSITION + ";" +
+            "attribute vec2 " + FIELD_A_TEX_COORD + ";" +
+            "varying vec2 " + FIELD_V_TEX_COORD + ";" +
+            "void main() {" +
+            "  gl_Position = " + FIELD_MATRIX_MVP + " * " + FIELD_POSITION + ";" +
+            "  " + FIELD_V_TEX_COORD + " = " + FIELD_A_TEX_COORD + ";" +
+            "}";
 
     private static final String SHADER_CODE_BITMAP_FRAGMENT =
             "precision mediump float;" +
-                    "varying vec2 " + FIELD_V_TEX_COORD + ";" +
-                    "uniform sampler2D " + FIELD_S_TEXTURE + ";" +
-                    "void main(){" +
-                    "   gl_FragColor = texture2D(" + FIELD_S_TEXTURE + "," + FIELD_V_TEX_COORD + ");" +
-                    "}";
+            "varying vec2 " + FIELD_V_TEX_COORD + ";" +
+            "uniform sampler2D " + FIELD_S_TEXTURE + ";" +
+            "void main() {" +
+            "   gl_FragColor = texture2D(" + FIELD_S_TEXTURE + "," + FIELD_V_TEX_COORD + ");" +
+            "}";
 
     private FloatBuffer watermarkVertexBuffer;
 
@@ -70,6 +71,7 @@ public class GPUWatermark {
     public GPUWatermark() {
 
         program = createShaderProgram(SHADER_CODE_BITMAP_VERTEX_MVP, SHADER_CODE_BITMAP_FRAGMENT);
+        Log.d(TAG, "???0 " + program);
 
     }
 
@@ -159,7 +161,6 @@ public class GPUWatermark {
             GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
 
             // TODO need recycle this
-
 //            bitmap.recycle();
 
             watermarkTextureId = textures[0];

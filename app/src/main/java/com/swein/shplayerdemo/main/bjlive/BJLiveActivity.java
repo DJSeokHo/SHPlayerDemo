@@ -232,6 +232,14 @@ public class BJLiveActivity extends Activity {
                     rtmpSender.connect();
                     isRecording = true;
 
+//                    ThreadUtil.startUIThread(5000, new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            setWaterMark(bitmapSoftReference.get(), 200, 150,
+//                                    0, 0,
+//                                    1920, 1080, 30);
+//                        }
+//                    });
                 }
             }
         });

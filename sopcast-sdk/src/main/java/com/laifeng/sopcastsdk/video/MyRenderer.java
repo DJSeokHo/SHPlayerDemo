@@ -72,7 +72,8 @@ public class MyRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFram
                 if(mWatermark != null) {
                     mRenderSrfTex.setWatermark(mWatermark);
                 }
-            } else {
+            }
+            else {
                 mRenderSrfTex = null;
             }
         }
