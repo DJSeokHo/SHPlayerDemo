@@ -18,6 +18,7 @@ public class IntentUtil {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_HOME);
+        intent.setFlags( Intent.FLAG_ACTIVITY_NEW_TASK );
         context.startActivity(intent);
 
     }

@@ -225,13 +225,16 @@ public class RenderSrfTex {
                 mRecorder.makeCurrent();
                 initGL();
 
-                gpuWatermark = new GPUWatermark();
-                gpuWatermark.setWatermarkCoords(watermarkCoords);
-                gpuWatermark.setBitmap(mWatermarkImg);
+                if(mWatermarkImg != null) {
+                    gpuWatermark = new GPUWatermark();
+                    gpuWatermark.setWatermarkCoords(watermarkCoords);
+                    gpuWatermark.setBitmap(mWatermarkImg);
 
-                textWatermark = new GPUWatermark();
-                textWatermark.setWatermarkCoords(textCoords);
-                textWatermark.setBitmap(mWatermarkImg);
+                    textWatermark = new GPUWatermark();
+                    textWatermark.setWatermarkCoords(textCoords);
+                    textWatermark.setBitmap(mWatermarkImg);
+                }
+
             }
             else {
                 mRecorder.makeCurrent();
@@ -280,13 +283,17 @@ public class RenderSrfTex {
 
             GLES20.glUniformMatrix4fv(muPosMtxHandle, 1, false, mPosMtx, 0);
 
-            float[] mMVPMatrix = getMVPMatrix(watermarkRotation);
-            gpuWatermark.setMVPMatrix(mMVPMatrix);
-            gpuWatermark.draw();
+            if(gpuWatermark != null) {
+                float[] mMVPMatrix = getMVPMatrix(watermarkRotation);
+                gpuWatermark.setMVPMatrix(mMVPMatrix);
+                gpuWatermark.draw();
+            }
 
-            float[] textMVPMatrix = getTestMVPMatrix(-watermarkRotation);
-            textWatermark.setMVPMatrix(textMVPMatrix);
-            textWatermark.draw();
+            if(textWatermark != null) {
+                float[] textMVPMatrix = getTestMVPMatrix(-watermarkRotation);
+                textWatermark.setMVPMatrix(textMVPMatrix);
+                textWatermark.draw();
+            }
 
             mRecorder.swapBuffers();
 

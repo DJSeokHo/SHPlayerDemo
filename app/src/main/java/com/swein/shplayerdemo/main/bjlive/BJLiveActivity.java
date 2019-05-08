@@ -2,28 +2,21 @@ package com.swein.shplayerdemo.main.bjlive;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
-import android.graphics.Matrix;
 import android.hardware.Camera;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 
 import com.laifeng.sopcastsdk.camera.CameraHolder;
@@ -42,12 +35,7 @@ import com.swein.shplayerdemo.framework.util.bitmaps.BitmapUtil;
 import com.swein.shplayerdemo.framework.util.debug.log.ILog;
 import com.swein.shplayerdemo.framework.util.thread.ThreadUtil;
 import com.swein.shplayerdemo.framework.util.toast.ToastUtil;
-import com.swein.shplayerdemo.main.bjlive.imagelayer.ImageLayerViewHolder;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +54,7 @@ public class BJLiveActivity extends Activity {
     private List<String> permissionList = new ArrayList<>();
 
     private Button buttonMic;
+    private Button buttonOrientation;
     private Button buttonFlash;
     private Button buttonSwitch;
     private Button buttonFocus;
@@ -97,6 +86,14 @@ public class BJLiveActivity extends Activity {
 
     private SoftReference<Bitmap> bitmapSoftReference;
 
+    private CameraConfiguration.Builder cameraBuilder;
+
+    private boolean isCameraOpen = false;
+
+    private Camera.Parameters params;
+    private List<Camera.Size> previewSizes;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -123,11 +120,12 @@ public class BJLiveActivity extends Activity {
         findViews();
 
         initCameraView();
+        initRtmpSender();
 
         Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.water_mark);
         bitmapSoftReference  = new SoftReference<>(BitmapUtil.getScaleBitmap(bitmap, (int) (bitmap.getWidth() * 0.6), (int) (bitmap.getHeight() * 0.6)));
 
-        ILog.iLogDebug(TAG, getDeviceScreenWidth(this) + " !!!! " + getDeviceScreenHeight(this));
+//        ILog.iLogDebug(TAG, getDeviceScreenWidth(this) + " !!!! " + getDeviceScreenHeight(this));
     }
 
     private void initEffects() {
@@ -166,7 +164,6 @@ public class BJLiveActivity extends Activity {
                 else {
                     isMute = true;
                 }
-
                 cameraLivingView.mute(isMute);
             }
         });
@@ -232,14 +229,6 @@ public class BJLiveActivity extends Activity {
                     rtmpSender.connect();
                     isRecording = true;
 
-//                    ThreadUtil.startUIThread(5000, new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            setWaterMark(bitmapSoftReference.get(), 200, 150,
-//                                    0, 0,
-//                                    1920, 1080, 30);
-//                        }
-//                    });
                 }
             }
         });
@@ -251,143 +240,143 @@ public class BJLiveActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-                ImageLayerViewHolder imageLayerViewHolder = new ImageLayerViewHolder(BJLiveActivity.this, new ImageLayerViewHolder.ImageLayerViewHolderDelegate() {
-                    @Override
-                    public void onActionUp(View view, int width, int height, float translationX, float translationY, float scale, float rotation) {
-//                        ILog.iLogDebug(TAG, view.getWidth() + " " + view.getHeight() + " " +
-//                                width + " " + height + " " + translationX + " " + translationY + " " + scale + " " + rotation);
-
-                        frameLayoutImageContainer.removeAllViews();
-                        frameLayoutImageContainer.setVisibility(View.GONE);
-
-                        width = (int) (width * scale);
-                        height = (int) (height * scale);
-
-                        int diagonal = (int) Math.sqrt(width * width + height * height);
-
-                        ImageView imageView = new ImageView(BJLiveActivity.this);
-                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(width, height);
-                        imageView.setLayoutParams(layoutParams);
-                        imageView.setBackgroundColor(Color.TRANSPARENT);
-                        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-
-                        FrameLayout.LayoutParams fl = (FrameLayout.LayoutParams) frameLayoutImageContainer.getLayoutParams();
-                        fl.width = diagonal;
-                        fl.height = diagonal;
-                        frameLayoutImageContainer.setLayoutParams(fl);
-
-                        frameLayoutImageContainer.setX(translationX);
-                        frameLayoutImageContainer.setY(translationY);
-
-                        frameLayoutImageContainer.addView(imageView);
-                        frameLayoutImageContainer.setVisibility(View.VISIBLE);
-
-                        int finalWidth = width;
-                        int finalHeight = height;
-
-                        ThreadUtil.startUIThread(100, new Runnable() {
-                            @Override
-                            public void run() {
-
-                                imageView.setX((frameLayoutImageContainer.getWidth() - finalWidth) * 0.5f);
-                                imageView.setY((frameLayoutImageContainer.getHeight() - finalHeight) * 0.5f);
-
-                                imageView.setImageBitmap(adjustPhotoRotation(bitmapSoftReference.get(), (int) rotation));
-
-                                frameLayoutImageContainer.setDrawingCacheEnabled(true);
-                                frameLayoutImageContainer.buildDrawingCache();  //启用DrawingCache并创建位图
-                                Bitmap tb = Bitmap.createBitmap(frameLayoutImageContainer.getDrawingCache()); //创建一个DrawingCache的拷贝，因为DrawingCache得到的位图在禁用后会被回收
-                                frameLayoutImageContainer.setDrawingCacheEnabled(false);  //禁用DrawingCahce否则会影响性能
-
-                                imageView.setImageBitmap(null);
-                                frameLayoutImageContainer.setVisibility(View.GONE);
-
-                                ThreadUtil.startThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-
-                                        try {
-
-                                            saveToLocal(tb, "hahaha");
-
-                                            ThreadUtil.startUIThread(0, new Runnable() {
-                                                @Override
-                                                public void run() {
-
-                                                    FileInputStream fis = null;
-                                                    try {
-                                                        fis = new FileInputStream("/sdcard/DCIM/Camera/" + "hahaha" + ".png");
-                                                    }
-                                                    catch (FileNotFoundException e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                    Bitmap bbbb  = BitmapFactory.decodeStream(fis);
-
-
-//                                                    ILog.iLogDebug(TAG, "???bbbbb " + bbbb.getWidth() + " " + bbbb.getHeight());
-                                                    ThreadUtil.startUIThread(500, new Runnable() {
-                                                        @Override
-                                                        public void run() {
-
-                                                            imageView.setImageBitmap(bbbb);
-                                                            frameLayoutImageContainer.setVisibility(View.VISIBLE);
-
-                                                            setWaterMark(bbbb, bbbb.getWidth(), bbbb.getHeight(),
-                                                                    screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
-                                                                    view.getWidth(), view.getHeight(), 0);
-                                                        }
-                                                    });
-
-
-                                                }
-                                            });
-                                        }
-                                        catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-
-//                                setWaterMark(bitmap, finalWidth, finalHeight,
-//                                        screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
-//                                        view.getWidth(), view.getHeight(), 0);
+//                ImageLayerViewHolder imageLayerViewHolder = new ImageLayerViewHolder(BJLiveActivity.this, new ImageLayerViewHolder.ImageLayerViewHolderDelegate() {
+//                    @Override
+//                    public void onActionUp(View view, int width, int height, float translationX, float translationY, float scale, float rotation) {
+////                        ILog.iLogDebug(TAG, view.getWidth() + " " + view.getHeight() + " " +
+////                                width + " " + height + " " + translationX + " " + translationY + " " + scale + " " + rotation);
 //
+//                        frameLayoutImageContainer.removeAllViews();
+//                        frameLayoutImageContainer.setVisibility(View.GONE);
+//
+//                        width = (int) (width * scale);
+//                        height = (int) (height * scale);
+//
+//                        int diagonal = (int) Math.sqrt(width * width + height * height);
+//
+//                        ImageView imageView = new ImageView(BJLiveActivity.this);
+//                        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(width, height);
+//                        imageView.setLayoutParams(layoutParams);
+//                        imageView.setBackgroundColor(Color.TRANSPARENT);
+//                        imageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//
+//                        FrameLayout.LayoutParams fl = (FrameLayout.LayoutParams) frameLayoutImageContainer.getLayoutParams();
+//                        fl.width = diagonal;
+//                        fl.height = diagonal;
+//                        frameLayoutImageContainer.setLayoutParams(fl);
+//
+//                        frameLayoutImageContainer.setX(translationX);
+//                        frameLayoutImageContainer.setY(translationY);
+//
+//                        frameLayoutImageContainer.addView(imageView);
+//                        frameLayoutImageContainer.setVisibility(View.VISIBLE);
+//
+//                        int finalWidth = width;
+//                        int finalHeight = height;
+//
+//                        ThreadUtil.startUIThread(100, new Runnable() {
+//                            @Override
+//                            public void run() {
+//
+//                                imageView.setX((frameLayoutImageContainer.getWidth() - finalWidth) * 0.5f);
+//                                imageView.setY((frameLayoutImageContainer.getHeight() - finalHeight) * 0.5f);
+//
+//                                imageView.setImageBitmap(adjustPhotoRotation(bitmapSoftReference.get(), (int) rotation));
+//
+//                                frameLayoutImageContainer.setDrawingCacheEnabled(true);
+//                                frameLayoutImageContainer.buildDrawingCache();  //启用DrawingCache并创建位图
+//                                Bitmap tb = Bitmap.createBitmap(frameLayoutImageContainer.getDrawingCache()); //创建一个DrawingCache的拷贝，因为DrawingCache得到的位图在禁用后会被回收
+//                                frameLayoutImageContainer.setDrawingCacheEnabled(false);  //禁用DrawingCahce否则会影响性能
+//
+//                                imageView.setImageBitmap(null);
 //                                frameLayoutImageContainer.setVisibility(View.GONE);
-//                                frameLayoutImageContainer.removeAllViews();
-                            }
-                        });
-
-
-//                        imageView.setX(relativeLayoutImageContainer.getWidth() * 0.5f + imageView.getWidth() * 0.5f);
-//                        imageView.setY(relativeLayoutImageContainer.getHeight() * 0.5f + imageView.getHeight() * 0.5f);
-
-//                        ILog.iLogDebug(TAG, frameLayoutImageContainer.getWidth() + " " + frameLayoutImageContainer.getHeight());
-//                        ILog.iLogDebug(TAG, imageView.getWidth() + " " + imageView.getHeight());
-//                        ILog.iLogDebug(TAG, width + " " + height);
-//                        ILog.iLogDebug(TAG, translationX + " " + translationY);
-//                        ILog.iLogDebug(TAG, scale + " " + rotation);
-//                        setWaterMark(bitmapSoftReference.get(), (int)(width * scale), (int)(height * scale),
-//                                screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
-//                                view.getWidth(), view.getHeight(), rotation);
-                    }
-                });
-
-                frameLayoutContainer.addView(imageLayerViewHolder.getView());
-
-                ThreadUtil.startThread(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        ThreadUtil.startUIThread(0, new Runnable() {
-                            @Override
-                            public void run() {
-
-                                imageLayerViewHolder.setImageView(bitmapSoftReference.get());
-                            }
-                        });
-
-                    }
-                });
+//
+//                                ThreadUtil.startThread(new Runnable() {
+//                                    @Override
+//                                    public void run() {
+//
+//                                        try {
+//
+//                                            saveToLocal(tb, "hahaha");
+//
+//                                            ThreadUtil.startUIThread(0, new Runnable() {
+//                                                @Override
+//                                                public void run() {
+//
+//                                                    FileInputStream fis = null;
+//                                                    try {
+//                                                        fis = new FileInputStream("/sdcard/DCIM/Camera/" + "hahaha" + ".png");
+//                                                    }
+//                                                    catch (FileNotFoundException e) {
+//                                                        e.printStackTrace();
+//                                                    }
+//                                                    Bitmap bbbb  = BitmapFactory.decodeStream(fis);
+//
+//
+////                                                    ILog.iLogDebug(TAG, "???bbbbb " + bbbb.getWidth() + " " + bbbb.getHeight());
+//                                                    ThreadUtil.startUIThread(500, new Runnable() {
+//                                                        @Override
+//                                                        public void run() {
+//
+//                                                            imageView.setImageBitmap(bbbb);
+//                                                            frameLayoutImageContainer.setVisibility(View.VISIBLE);
+//
+//                                                            setWaterMark(bbbb, bbbb.getWidth(), bbbb.getHeight(),
+//                                                                    screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
+//                                                                    view.getWidth(), view.getHeight(), 0);
+//                                                        }
+//                                                    });
+//
+//
+//                                                }
+//                                            });
+//                                        }
+//                                        catch (Exception e) {
+//                                            e.printStackTrace();
+//                                        }
+//                                    }
+//                                });
+//
+////                                setWaterMark(bitmap, finalWidth, finalHeight,
+////                                        screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
+////                                        view.getWidth(), view.getHeight(), 0);
+////
+////                                frameLayoutImageContainer.setVisibility(View.GONE);
+////                                frameLayoutImageContainer.removeAllViews();
+//                            }
+//                        });
+//
+//
+////                        imageView.setX(relativeLayoutImageContainer.getWidth() * 0.5f + imageView.getWidth() * 0.5f);
+////                        imageView.setY(relativeLayoutImageContainer.getHeight() * 0.5f + imageView.getHeight() * 0.5f);
+//
+////                        ILog.iLogDebug(TAG, frameLayoutImageContainer.getWidth() + " " + frameLayoutImageContainer.getHeight());
+////                        ILog.iLogDebug(TAG, imageView.getWidth() + " " + imageView.getHeight());
+////                        ILog.iLogDebug(TAG, width + " " + height);
+////                        ILog.iLogDebug(TAG, translationX + " " + translationY);
+////                        ILog.iLogDebug(TAG, scale + " " + rotation);
+////                        setWaterMark(bitmapSoftReference.get(), (int)(width * scale), (int)(height * scale),
+////                                screenXToOriginalX(translationX, view.getWidth()), screenYToOriginalY(translationY, view.getHeight()),
+////                                view.getWidth(), view.getHeight(), rotation);
+//                    }
+//                });
+//
+//                frameLayoutContainer.addView(imageLayerViewHolder.getView());
+//
+//                ThreadUtil.startThread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//
+//                        ThreadUtil.startUIThread(0, new Runnable() {
+//                            @Override
+//                            public void run() {
+//
+//                                imageLayerViewHolder.setImageView(bitmapSoftReference.get());
+//                            }
+//                        });
+//
+//                    }
+//                });
 
             }
         });
@@ -396,84 +385,147 @@ public class BJLiveActivity extends Activity {
         buttonText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
             }
         });
 
 
-    }
+        buttonOrientation = findViewById(R.id.buttonOrientation);
+        buttonOrientation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
-    private void saveToLocal(Bitmap bitmap, String bitName) throws Exception {
-        File file = new File("/sdcard/DCIM/Camera/" + bitName + ".png");
-        if (file.exists()) {
-            file.delete();
-        }
-        FileOutputStream out;
-        try {
-            out = new FileOutputStream(file);
-            if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
-                out.flush();
-                out.close();
-
-                // Uri uri = Uri.fromFile(file);
-                // sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
-                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-                Uri uri = Uri.fromFile(file);
-                intent.setData(uri);
-                this.sendBroadcast(intent);
-
-                if(!bitmap.isRecycled()) {
-                    bitmap.recycle();
+                if(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE == getRequestedOrientation()) {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
                 }
+                else {
+                    setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                }
+
             }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    Bitmap adjustPhotoRotation(Bitmap bm, final int orientationDegree) {
-
-        Matrix m = new Matrix();
-        m.setRotate(orientationDegree, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
-        try {
-            Bitmap bm1 = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), m, true);
-
-            return bm1;
-
-        }
-        catch (OutOfMemoryError ex) {
-            ex.printStackTrace();
-        }
-
-        return null;
+        });
 
     }
 
+    /**
+     * need add
+     * android:configChanges="keyboardHidden|orientation|screenSize"
+     * in AndroidManifest.xml
+     * @param newConfig
+     */
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        ILog.iLogDebug(TAG, "Configuration");
 
-    private int getDeviceScreenWidth(Context context) {
+        cameraLivingView.stop();
+        cameraLivingView.release();
+        rtmpSender.stop();
 
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return 0;
-        }
+        cameraLivingView.init();
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
+        ThreadUtil.startThread(new Runnable() {
+            @Override
+            public void run() {
+                cameraBuilder = new CameraConfiguration.Builder();
+                cameraBuilder.setOrientation(CameraConfiguration.Orientation.LANDSCAPE).setFacing(CameraConfiguration.Facing.FRONT);
 
-        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
-        return displayMetrics.widthPixels;
+                if(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE == getRequestedOrientation()) {
+
+                    cameraBuilder.setOrientation(CameraConfiguration.Orientation.LANDSCAPE).setFacing(CameraConfiguration.Facing.FRONT);
+                    ILog.iLogDebug(TAG, "SCREEN_ORIENTATION_LANDSCAPE");
+                }
+                else {
+
+                    cameraBuilder.setOrientation(CameraConfiguration.Orientation.PORTRAIT).setFacing(CameraConfiguration.Facing.FRONT);
+                    ILog.iLogDebug(TAG, "SCREEN_ORIENTATION_PORTRAIT");
+                }
+
+                CameraConfiguration cameraConfiguration = cameraBuilder.build();
+                cameraLivingView.setCameraConfiguration(cameraConfiguration);
+
+                ThreadUtil.startUIThread(0, new Runnable() {
+                    @Override
+                    public void run() {
+                        rtmpSender.start();
+                    }
+                });
+
+            }
+        });
+
     }
 
-    private int getDeviceScreenHeight(Context context) {
-
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            return 0;
-        }
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-
-        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
-        return displayMetrics.heightPixels;
-    }
+//    private void saveToLocal(Bitmap bitmap, String bitName) throws Exception {
+//        File file = new File("/sdcard/DCIM/Camera/" + bitName + ".png");
+//        if (file.exists()) {
+//            file.delete();
+//        }
+//        FileOutputStream out;
+//        try {
+//            out = new FileOutputStream(file);
+//            if (bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
+//                out.flush();
+//                out.close();
+//
+//                // Uri uri = Uri.fromFile(file);
+//                // sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri));
+//                Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+//                Uri uri = Uri.fromFile(file);
+//                intent.setData(uri);
+//                this.sendBroadcast(intent);
+//
+//                if(!bitmap.isRecycled()) {
+//                    bitmap.recycle();
+//                }
+//            }
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
+//
+//    Bitmap adjustPhotoRotation(Bitmap bm, final int orientationDegree) {
+//
+//        Matrix m = new Matrix();
+//        m.setRotate(orientationDegree, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
+//        try {
+//            Bitmap bm1 = Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), m, true);
+//
+//            return bm1;
+//
+//        }
+//        catch (OutOfMemoryError ex) {
+//            ex.printStackTrace();
+//        }
+//
+//        return null;
+//
+//    }
+//
+//
+//    private int getDeviceScreenWidth(Context context) {
+//
+//        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//            return 0;
+//        }
+//
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//
+//        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+//        return displayMetrics.widthPixels;
+//    }
+//
+//    private int getDeviceScreenHeight(Context context) {
+//
+//        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
+//            return 0;
+//        }
+//
+//        DisplayMetrics displayMetrics = new DisplayMetrics();
+//
+//        ((Activity)context).getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
+//        return displayMetrics.heightPixels;
+//    }
 
     /**
      * must check camera null
@@ -492,13 +544,17 @@ public class BJLiveActivity extends Activity {
      */
     private void setBestCameraSize() {
 
-        Camera.Parameters params = CameraHolder.instance().getmCameraDevice().getParameters();
-        List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
+
         for(int i = 0; i < previewSizes.size(); i++) {
             ILog.iLogDebug(TAG, String.valueOf(previewSizes.get(i).width) + " " + String.valueOf(previewSizes.get(i).height));
         }
 
-        setCameraSize(previewSizes.get(0).width, previewSizes.get(0).height);
+        if(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE == getRequestedOrientation()) {
+            setCameraSize(previewSizes.get(0).width, previewSizes.get(0).height);
+        }
+        else {
+            setCameraSize(previewSizes.get(0).height, previewSizes.get(0).width);
+        }
     }
 
     private void setRtmpSize(int width, int height) {
@@ -512,26 +568,41 @@ public class BJLiveActivity extends Activity {
             ILog.iLogDebug(TAG, String.valueOf(previewSizes.get(i).width) + " " + String.valueOf(previewSizes.get(i).height));
         }
 
-        setRtmpSize(previewSizes.get(0).width, previewSizes.get(0).height);
+        if(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE == getRequestedOrientation()) {
+            setRtmpSize(previewSizes.get(0).width, previewSizes.get(0).height);
+        }
+        else {
+            setRtmpSize(previewSizes.get(0).height, previewSizes.get(0).width);
+        }
+
     }
 
     private void initCameraView() {
 
         cameraLivingView.init();
 
-        CameraConfiguration.Builder cameraBuilder = new CameraConfiguration.Builder();
-        cameraBuilder.setOrientation(CameraConfiguration.Orientation.LANDSCAPE)
-                .setFacing(CameraConfiguration.Facing.BACK);
+        cameraBuilder = new CameraConfiguration.Builder();
+        cameraBuilder.setOrientation(CameraConfiguration.Orientation.LANDSCAPE).setFacing(CameraConfiguration.Facing.FRONT);
+//        cameraBuilder.setOrientation(CameraConfiguration.Orientation.PORTRAIT).setFacing(CameraConfiguration.Facing.FRONT);
+
         CameraConfiguration cameraConfiguration = cameraBuilder.build();
         cameraLivingView.setCameraConfiguration(cameraConfiguration);
-
-
 
         // set camera open listener
         cameraLivingView.setCameraOpenListener(new CameraListener() {
             @Override
             public void onOpenSuccess() {
+
+
+
                 ToastUtil.showShortToastNormal(BJLiveActivity.this, "camera open success");
+
+                if(params == null && previewSizes == null) {
+                    params = CameraHolder.instance().getmCameraDevice().getParameters();
+                    previewSizes = params.getSupportedPreviewSizes();
+                }
+
+                isCameraOpen = true;
 
                 setBestCameraSize();
                 setBestRtmpSize();
@@ -539,22 +610,17 @@ public class BJLiveActivity extends Activity {
                 ThreadUtil.startUIThread(1000, new Runnable() {
                     @Override
                     public void run() {
-//                        FileInputStream fis = null;
-//                        try {
-//                            fis = new FileInputStream("/sdcard/DCIM/Camera/" + "hahaha" + ".png");
-//                        }
-//                        catch (FileNotFoundException e) {
-//                            e.printStackTrace();
-//                        }
-//                        Bitmap bbbb  = BitmapFactory.decodeStream(fis);
-                        setWaterMark(bitmapSoftReference.get(), 200, 150,
-                                0, 0,
-                                1920, 1080, 30);
+
+//                        setWaterMark(bitmapSoftReference.get(), 200, 150,
+//                                0, 0,
+//                                1920, 1080, 30);
+
+//                        setWaterMark(bitmapSoftReference.get(), 200, 150,
+//                                0, 0,
+//                                1080, 1920, 30);
+
                     }
                 });
-
-
-
             }
 
             @Override
@@ -582,9 +648,13 @@ public class BJLiveActivity extends Activity {
         packer.initAudioParams(AudioConfiguration.DEFAULT_FREQUENCY, 16, false);
         cameraLivingView.setPacker(packer);
 
+    }
+
+    private void initRtmpSender() {
         rtmpSender = new RtmpSender();
 
-        rtmpSender.setVideoParams(1280, 720);
+//        rtmpSender.setVideoParams(1080, 1920);
+        rtmpSender.setVideoParams(1920, 1080);
         rtmpSender.setAudioParams(AudioConfiguration.DEFAULT_FREQUENCY, 16, false);
         rtmpSender.setSenderListener(senderListener);
         cameraLivingView.setSender(rtmpSender);
@@ -602,6 +672,7 @@ public class BJLiveActivity extends Activity {
                 ToastUtil.showShortToastNormal(BJLiveActivity.this, "start living");
             }
         });
+
 
         rtmpSender.start();
     }

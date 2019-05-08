@@ -36,6 +36,7 @@
         android:theme="@style/AppTheme">
         <activity android:name=".main.bjlive.BJLiveActivity"
             android:launchMode="singleTask"
+            android:configChanges="keyboardHidden|orientation|screenSize"
             android:screenOrientation="landscape" />
         <activity
             android:name=".main.vodupload.VodUploadActivity"
