@@ -219,7 +219,8 @@ public class BJLiveActivity extends Activity {
                     isRecording = false;
                 }
                 else {
-                    String uploadUrl = "rtmp://cdn.bestream.kr/dotv/reAd5f";
+//                    String uploadUrl = "rtmp://cdn.bestream.kr/dotv/reAd5f";
+                    String uploadUrl = "rtmp://175.124.225.212/onnoff/mmup";
 //                    String uploadUrl = "rtmp://mobilemedia1.xst.kinxcdn.com/dotv/abcdef";
 //                    String uploadUrl = "rtmp://cdn.bestream.kr/onnoff";
                     rtmpSender.setAddress(uploadUrl);
